@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Pointage.Accounts;
 using Pointage.Audit;
 using Pointage.Data;
+using Pointage.Kiosk;
 using Pointage.Members;
 using Pointage.Presences;
 using Pointage.Settings;
@@ -30,6 +31,7 @@ builder.Services.AddSingleton<SettingsStore>();
 builder.Services.AddSingleton<MemberStore>();
 builder.Services.AddSingleton<PresenceStore>();
 builder.Services.AddSingleton<StatsService>();
+builder.Services.AddSingleton<KioskPairing>();
 
 builder.Services.AddRazorPages(o =>
 {
@@ -69,6 +71,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
+app.MapKioskApi();
 app.Run();
 
 static Db OpenDb(IConfiguration config)

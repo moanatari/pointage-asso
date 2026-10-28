@@ -1,0 +1,50 @@
+@page
+@model Pointage.Pages.Borne.IndexModel
+@{
+    // Page plein écran autonome : pas de barre de navigation du responsable.
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Borne – Pointage</title>
+    <link rel="stylesheet" href="/static/kiosk.css">
+</head>
+<body>
+@if (!Model.Paired)
+{
+    <form id="pair" class="pair">
+        <h1>Entrez le code de liaison</h1>
+        <p>Le code s'affiche sur le poste du responsable, dans « Bornes ».</p>
+        <input id="pair-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required autofocus>
+        <button type="submit">Lier la borne</button>
+        <p id="pair-error" class="error" hidden></p>
+    </form>
+}
+else
+{
+    <section id="step-search">
+        <h1>Bonjour ! Cherche ton prénom</h1>
+        <input id="q" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ton prénom ou ton code" aria-label="Recherche">
+        <ul id="results" class="results"></ul>
+        <div id="keyboard" class="keyboard" hidden></div>
+    </section>
+    <section id="step-confirm" hidden>
+        <h1>C'est bien toi ?</h1>
+        <p id="who" class="who"></p>
+        <div class="actions">
+            <button id="yes" class="yes">✔ Oui, je suis arrivé</button>
+            <button id="no" class="no">✘ Non, retour</button>
+            <button id="leave" class="leave" hidden>Je pars</button>
+        </div>
+    </section>
+    <section id="step-done" hidden>
+        <p id="message" class="message"></p>
+    </section>
+    <p id="error" class="error" hidden>Le pointage est indisponible, signale-toi au responsable.</p>
+}
+<script src="/static/kiosk.js"></script>
+</body>
+</html>
