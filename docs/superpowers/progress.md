@@ -20,7 +20,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 7 | Borne : liaison, API, kiosque | opus | fait | feature/07-borne | PR #7 | parcours navigateur réel à faire ; KioskPair journalisé à l'émission du code |
 | 8 | Écrans du responsable | sonnet | fait | feature/08-ecrans | PR #8 | Edit présence : heures seulement ; PresenceStatus.Label() pour les libellés FR ; rendu visuel à vérifier |
 | 9 | Historique | haiku | fait | feature/09-historique | PR #9 | anonymisés triés en tête avec sort=name (mineur) |
-| 10 | Import CSV | sonnet | à faire | | | |
+| 10 | Import CSV | sonnet | fait | feature/10-import | PR #10 | doublons dans le fichier aussi ignorés ; confirm re-analyse côté serveur |
 | 11 | Réglages, comptes, purge, journal | sonnet | à faire | | | |
 | 12 | Mises à jour GitHub | opus | à faire | | | |
 | 13 | Installateur, CI, script de la borne | sonnet | à faire | | | |
