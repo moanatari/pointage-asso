@@ -1,14 +1,35 @@
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Pointage.Accounts;
+using Pointage.Members;
+using Pointage.Presences;
 using Pointage.Stats;
 
 namespace Pointage.Tests;
 
 public class HistoryTests
 {
+    private static readonly ContactInput NoContact = new(null, null, null, null, null);
+
     // L'horloge de l'application est la vraie horloge en test : on calcule la semaine attendue à partir de maintenant.
     private static Period LastWeekFromNow() => Periods.LastWeek(DateOnly.FromDateTime(DateTime.Now));
+
+    private static Member CreateMember(AppFactory app, string last, string first) =>
+        app.Services.GetRequiredService<MemberStore>()
+            .Create(new MemberInput(last, first, new DateOnly(2015, 3, 12), null, null, null, NoContact));
+
+    // Présences validées la semaine dernière : Martin vient deux jours, Bernard un seul.
+    private static void SeedLastWeek(AppFactory app, Member martin, Member bernard)
+    {
+        var presences = app.Services.GetRequiredService<PresenceStore>();
+        var accountId = app.Services.GetRequiredService<AccountStore>()
+            .Create("marie-" + Guid.NewGuid().ToString("N")[..8], AppFactory.Password, Role.Manager);
+        var monday = LastWeekFromNow().From;
+        presences.AddManual(martin.Id, monday.ToDateTime(new TimeOnly(9, 0)), accountId);
+        presences.AddManual(martin.Id, monday.AddDays(1).ToDateTime(new TimeOnly(9, 0)), accountId);
+        presences.AddManual(bernard.Id, monday.ToDateTime(new TimeOnly(10, 0)), accountId);
+    }
 
     [Fact]
     public async Task History_DefaultIsLastWeek()
@@ -47,5 +68,63 @@ public class HistoryTests
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=custom&from=2026-10-25&to=2026-10-19"));
 
         Assert.Contains("Historique du 19/10/2026 au 25/10/2026", html);
+    }
+
+    [Fact]
+    public async Task History_SortByName_OrdersByLastName()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        // Martin a deux venues et Bernard une : le tri par venues place Martin en tête, le tri par nom Bernard.
+        SeedLastWeek(app, CreateMember(app, "Martin", "Lucas"), CreateMember(app, "Bernard", "Anne"));
+
+        var byDays = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek&sort=days"));
+        var byName = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek&sort=name"));
+
+        Assert.True(byDays.IndexOf("Lucas Martin", StringComparison.Ordinal) < byDays.IndexOf("Anne Bernard", StringComparison.Ordinal));
+        Assert.True(byName.IndexOf("Anne Bernard", StringComparison.Ordinal) < byName.IndexOf("Lucas Martin", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task History_InvalidPresetAndSort_FallBackToLastWeek()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var week = LastWeekFromNow();
+
+        var response = await client.GetAsync("/History?preset=zzz&sort=zzz");
+
+        response.EnsureSuccessStatusCode();
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains($"Historique du {week.From:dd/MM/yyyy} au {week.To:dd/MM/yyyy}", html);
+    }
+
+    [Fact]
+    public async Task History_CustomWithoutDates_FallsBackToLastWeek()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var week = LastWeekFromNow();
+
+        var response = await client.GetAsync("/History?preset=custom");
+
+        response.EnsureSuccessStatusCode();
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains($"Historique du {week.From:dd/MM/yyyy} au {week.To:dd/MM/yyyy}", html);
+    }
+
+    [Fact]
+    public async Task History_WithData_ShowsCountsAndCorrectLink()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var martin = CreateMember(app, "Martin", "Lucas");
+        SeedLastWeek(app, martin, CreateMember(app, "Bernard", "Anne"));
+        var id = app.Services.GetRequiredService<PresenceStore>().ForMember(martin.Id, 1).Single().Presence.Id;
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek"));
+
+        Assert.Contains("3 présences · 2 membres différents", html);
+        Assert.Contains($"href=\"/Presences/Edit/{id}\"", html);
     }
 }
