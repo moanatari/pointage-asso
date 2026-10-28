@@ -23,7 +23,13 @@
 - Un projet applicatif (`src/Pointage`) et un projet de tests (`tests/Pointage.Tests`). Pas d'interface à une seule implémentation. Pas d'autre paquet NuGet que ceux du Tech Stack.
 - Port par défaut `5080`, durée de session du responsable `30 min` glissantes, code de liaison de la borne valable `10 min`, à usage unique, invalidé après `5` essais faux.
 - Réglages par défaut : conservation `12` mois, clavier de la borne affiché, bouton départ désactivé.
-- Dépôt GitHub pour les mises à jour : clé de configuration `Pointage:GitHubRepo`, valeur par défaut `moanatari/user-caller`.
+- Dépôt GitHub pour les mises à jour : clé de configuration `Pointage:GitHubRepo`, valeur par défaut `moanatari/pointage-asso`.
+- **Branches** :
+  - `main` = production. Elle ne reçoit que des fusions venant de `dev`, et les tags `vX.Y.Z` y sont posés.
+  - `dev` = branche par défaut et d'intégration.
+  - Chaque tâche se fait sur `feature/<NN>-<nom-court>`, créée depuis `dev`, puis fusionnée dans `dev` par une Pull Request une fois la relecture faite.
+  - On ne commite jamais directement sur `main` ni sur `dev`.
+- **Suivi** : à la fin de chaque tâche, mettre à jour `docs/superpowers/progress.md` (état, branche, PR, notes pour la reprise).
 
 ## Review Focus
 
@@ -91,7 +97,7 @@ docs/ARCHITECTURE.md  docs/borne.md  docs/rgpd/registre-des-traitements.md  docs
 
 ```json
 { "Urls": "http://0.0.0.0:5080",
-  "Pointage": { "DataDir": "", "GitHubRepo": "moanatari/user-caller" } }
+  "Pointage": { "DataDir": "", "GitHubRepo": "moanatari/pointage-asso" } }
 ```
 
 Un `DataDir` vide signifie `%ProgramData%\Pointage`.
@@ -739,7 +745,7 @@ public void IsNewer_Works(string tag, string current, bool expected)
       - ouverture de `http://localhost:5080/`, avec le flag `postinstall skipifsilent` ;
     - `[UninstallRun]` : arrêt et suppression du service, puis suppression de la règle de pare-feu. **La base dans `C:\ProgramData\Pointage` est conservée.**
   - `.github/workflows/build.yml` (`runs-on: windows-latest`) :
-    - à chaque push et PR : `dotnet test` ;
+    - à chaque push et PR vers `dev` ou `main` : `dotnet test` ;
     - sur un tag `v*` :
       - `dotnet publish src/Pointage -c Release -o publish -p:Version=${tag#v}` ;
       - `choco install innosetup -y` ;
