@@ -83,7 +83,9 @@ public sealed class Db(string path)
     private sealed class DateTimeHandler : SqlMapper.TypeHandler<DateTime>
     {
         public override void SetValue(IDbDataParameter p, DateTime v) => p.Value = v.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        public override DateTime Parse(object v) => DateTime.ParseExact((string)v, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        // Dapper n'appelle pas SetValue pour un DateTime : Microsoft.Data.Sqlite écrit alors les fractions de seconde.
+        // Les F sont facultatifs, donc la lecture accepte les deux formes.
+        public override DateTime Parse(object v) => DateTime.ParseExact((string)v, "yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture);
     }
 
     private sealed class TimeOnlyHandler : SqlMapper.TypeHandler<TimeOnly>

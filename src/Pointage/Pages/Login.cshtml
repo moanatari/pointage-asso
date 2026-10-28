@@ -1,0 +1,15 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Connexion";
+}
+<h1>Connexion</h1>
+<form method="post" class="stack">
+    @if (Model.Error is not null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <label>Identifiant <input asp-for="Username" autocomplete="username" required autofocus></label>
+    <label>Mot de passe <input asp-for="Password" type="password" autocomplete="current-password" required></label>
+    <button type="submit">Se connecter</button>
+</form>
