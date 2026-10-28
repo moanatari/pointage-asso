@@ -15,7 +15,7 @@ Sur le poste du responsable (Windows, toujours allumé quand les enfants arriven
 
 1. Télécharger `Pointage-Setup.exe` depuis la page [Releases](https://github.com/moanatari/pointage-asso/releases) du dépôt.
 2. Lancer le fichier. Windows affiche « Windows a protégé votre ordinateur » (SmartScreen), car le programme n'est pas signé : cliquer sur **Informations complémentaires**, puis **Exécuter quand même**.
-3. Suivre l'assistant. Il installe le programme, crée le service Windows `Pointage` (démarrage automatique) et ouvre le port 5080 du pare-feu pour le réseau privé.
+3. Suivre l'assistant. Il installe le programme, crée le service Windows `Pointage` (démarrage automatique) et ouvre le port 5080 du pare-feu pour les réseaux privé et domaine.
 4. Le navigateur s'ouvre sur l'assistant de premier lancement : nom de la structure, identifiant et mot de passe du super admin (8 caractères minimum), durée de conservation, clavier de la borne. La dernière page affiche l'adresse à saisir sur la borne.
 5. **Lier la borne** : voir `docs/borne.md`.
 
@@ -70,7 +70,7 @@ Les tests automatiques passent, mais les points suivants n'ont **jamais été v�
 - la borne en mode kiosque Edge sur un second PC, y compris le clavier à l'écran et la conservation du cookie de liaison après redémarrage ;
 - la vérification visuelle des écrans (responsable et borne).
 
-Prévoir une première version de test (tag `v0.x`) installée sur un PC de test avant d'équiper le vrai poste.
+Prévoir une première version de test (tag `v0.1.0`) installée sur un PC de test avant d'équiper le vrai poste.
 
 ## Documentation
 
