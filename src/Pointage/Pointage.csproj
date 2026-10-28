@@ -7,6 +7,15 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
+  <!-- Uniquement à la publication (« dotnet publish ») : un seul Pointage.exe qui embarque .NET, sans rien à installer sur le poste.
+       Hors publication, build et tests restent indépendants de la plateforme. -->
+  <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
