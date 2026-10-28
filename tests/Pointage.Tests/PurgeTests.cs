@@ -134,6 +134,13 @@ public class PurgeTests
     }
 
     [Fact]
+    public void AuditLabel_KnownCodeIsFrench_UnknownFallsBackToCode()
+    {
+        Assert.Equal("Réglages", AuditActions.Label(AuditActions.Settings));
+        Assert.Equal("Code.Inconnu", AuditActions.Label("Code.Inconnu"));
+    }
+
+    [Fact]
     public async Task Settings_Save_PersistsAndAudits()
     {
         using var app = new AppFactory();
@@ -145,7 +152,12 @@ public class PurgeTests
 
         Assert.Equal(new AppSettings("Judo Club", 24, false, true), app.Services.GetRequiredService<SettingsStore>().Get());
         Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.Settings);
-        Assert.Contains("Réglages", WebUtility.HtmlDecode(await client.GetStringAsync("/Admin/Journal"))); // libellé français, pas le code
+        // « Réglages » figure déjà dans le menu : on vérifie un libellé absent de la mise en page, et que le code brut n'apparaît pas.
+        app.Services.GetRequiredService<AuditLog>().Write(null, AuditActions.Purge);
+        var journal = WebUtility.HtmlDecode(await client.GetStringAsync("/Admin/Journal"));
+        Assert.Contains(">Purge RGPD<", journal);
+        Assert.DoesNotContain(">Purge<", journal);
+        Assert.DoesNotContain(">Settings<", journal);
 
         var bad = await AppFactory.PostFormAsync(client, "/Admin/Settings", "/Admin/Settings", new() { ["RetentionMonths"] = "0" });
         Assert.Contains("entre 1 et 120", WebUtility.HtmlDecode(await bad.Content.ReadAsStringAsync()));
