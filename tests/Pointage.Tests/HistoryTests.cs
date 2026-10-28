@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Pointage.Accounts;
 using Pointage.Members;
@@ -81,8 +82,16 @@ public class HistoryTests
         var byDays = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek&sort=days"));
         var byName = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek&sort=name"));
 
-        Assert.True(byDays.IndexOf("Lucas Martin", StringComparison.Ordinal) < byDays.IndexOf("Anne Bernard", StringComparison.Ordinal));
-        Assert.True(byName.IndexOf("Anne Bernard", StringComparison.Ordinal) < byName.IndexOf("Lucas Martin", StringComparison.Ordinal));
+        // Un nom absent donnerait -1 : on vérifie la présence avant de comparer l'ordre.
+        var martinByDays = byDays.IndexOf("Lucas Martin", StringComparison.Ordinal);
+        var bernardByDays = byDays.IndexOf("Anne Bernard", StringComparison.Ordinal);
+        Assert.True(martinByDays >= 0 && bernardByDays >= 0);
+        Assert.True(martinByDays < bernardByDays);
+
+        var martinByName = byName.IndexOf("Lucas Martin", StringComparison.Ordinal);
+        var bernardByName = byName.IndexOf("Anne Bernard", StringComparison.Ordinal);
+        Assert.True(martinByName >= 0 && bernardByName >= 0);
+        Assert.True(bernardByName < martinByName);
     }
 
     [Fact]
@@ -121,10 +130,13 @@ public class HistoryTests
         var martin = CreateMember(app, "Martin", "Lucas");
         SeedLastWeek(app, martin, CreateMember(app, "Bernard", "Anne"));
         var id = app.Services.GetRequiredService<PresenceStore>().ForMember(martin.Id, 1).Single().Presence.Id;
+        var monday = LastWeekFromNow().From.ToString("dd/MM/yyyy");
 
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek"));
 
         Assert.Contains("3 présences · 2 membres différents", html);
+        // Ligne de détail complète : date, membre, arrivée 09:00, pas de départ, statut validé (saisie manuelle).
+        Assert.Matches($"<td>{Regex.Escape(monday)}</td>\\s*<td>Lucas Martin</td>\\s*<td>09:00</td>\\s*<td>—</td>\\s*<td>validé</td>", html);
         Assert.Contains($"href=\"/Presences/Edit/{id}\"", html);
     }
 }
