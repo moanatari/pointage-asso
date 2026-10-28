@@ -1,0 +1,32 @@
+@page
+@model SetupModel
+@{
+    ViewData["Title"] = "Premier lancement";
+}
+<h1>Premier lancement</h1>
+@if (Model.KioskUrl is not null)
+{
+    <p>L'installation est terminée.</p>
+    <p>Adresse à saisir sur la borne : <strong>@Model.KioskUrl</strong></p>
+    <p><a href="/">Aller à l'accueil</a></p>
+}
+else
+{
+    <form method="post" class="stack">
+        @foreach (var e in Model.Errors)
+        {
+            <p class="error">@e</p>
+        }
+        <label>Nom de la structure <input asp-for="OrganizationName" required></label>
+        <fieldset>
+            <legend>Super administrateur</legend>
+            <label>Identifiant <input asp-for="Username" autocomplete="username" required></label>
+            <label>Mot de passe (@Pointage.Accounts.Passwords.MinLength caractères minimum)
+                <input asp-for="Password" type="password" autocomplete="new-password" required></label>
+            <label>Confirmez le mot de passe <input asp-for="Confirm" type="password" autocomplete="new-password" required></label>
+        </fieldset>
+        <label>Durée de conservation des données (mois) <input asp-for="RetentionMonths" type="number" min="1" required></label>
+        <label><input asp-for="KioskKeyboard" type="checkbox"> Afficher le clavier à l'écran sur la borne</label>
+        <button type="submit">Terminer l'installation</button>
+    </form>
+}

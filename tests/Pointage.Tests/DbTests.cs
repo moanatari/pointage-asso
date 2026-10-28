@@ -61,4 +61,15 @@ public class DbTests
         Assert.Equal(new TimeOnly(17, 5, 9), t);
         Assert.Equal("2026-10-27", c.ExecuteScalar<string>("SELECT @d", new { d = new DateOnly(2026, 10, 27) }));
     }
+
+    [Fact]
+    public void ClockNow_WithSubSecondTime_RoundTripsThroughDb()
+    {
+        // Dapper n'applique pas le handler DateTime aux paramètres : une heure à la milliseconde
+        // serait écrite avec ses fractions puis illisible par ParseExact.
+        var time = new Microsoft.Extensions.Time.Testing.FakeTimeProvider(new DateTimeOffset(2026, 10, 27, 17, 0, 0, 123, TimeSpan.Zero));
+        time.SetLocalTimeZone(TimeZoneInfo.Utc);
+        using var c = NewDb().Open();
+        Assert.Equal(new DateTime(2026, 10, 27, 17, 0, 0), c.QuerySingle<DateTime>("SELECT @now", new { now = time.Now() }));
+    }
 }

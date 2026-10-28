@@ -1,0 +1,12 @@
+/* Mise en page sobre, lisible sur un poste de bureau, sans dépendance externe. */
+body { font-family: system-ui, sans-serif; margin: 0; color: #222; background: #fafafa; }
+nav { display: flex; gap: 1rem; align-items: center; padding: .75rem 1rem; background: #2f5d8a; }
+nav a { color: #fff; text-decoration: none; }
+nav form { margin-left: auto; }
+main { max-width: 60rem; margin: 0 auto; padding: 1rem; }
+.stack { display: flex; flex-direction: column; gap: .75rem; max-width: 28rem; }
+.stack label { display: flex; flex-direction: column; gap: .25rem; }
+.stack label:has(input[type=checkbox]) { flex-direction: row; align-items: center; }
+fieldset { display: flex; flex-direction: column; gap: .75rem; }
+.error { color: #b00020; }
+button { padding: .4rem .9rem; cursor: pointer; }
