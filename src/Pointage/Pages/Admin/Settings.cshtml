@@ -1,0 +1,27 @@
+@page
+@model Pointage.Pages.Admin.SettingsModel
+@{
+    ViewData["Title"] = "Réglages";
+}
+<h1>Réglages</h1>
+<form method="post" class="stack">
+    @if (Model.Saved)
+    {
+        <p>Réglages enregistrés.</p>
+    }
+    <div asp-validation-summary="All" class="error"></div>
+    <label>Nom de la structure <input asp-for="OrganizationName"></label>
+    <label>Durée de conservation des membres inactifs (mois, de 1 à 120) <input asp-for="RetentionMonths" type="number" min="1" max="120" required></label>
+    <label><input asp-for="KioskKeyboard"> Afficher le clavier à la borne</label>
+    <label><input asp-for="KioskDeparture"> Afficher le bouton « départ » à la borne</label>
+    <button type="submit">Enregistrer</button>
+</form>
+
+<h2>Administration</h2>
+<ul class="plain">
+    <li><a href="/Admin/Accounts">Comptes</a></li>
+    <li><a href="/Admin/Kiosks">Bornes</a></li>
+    <li><a href="/Admin/Purge">Purge RGPD</a></li>
+    <li><a href="/Admin/Journal">Journal</a></li>
+    <li><a href="/Admin/Update">Mises à jour</a></li>
+</ul>

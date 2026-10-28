@@ -48,6 +48,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     o.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     o.SlidingExpiration = true;
     o.LoginPath = "/Login";
+    // Un responsable connecté qui ouvre /Admin/* reçoit un 403 explicite (et non un 404).
+    o.AccessDeniedPath = "/AccessDenied";
     // Relu à chaque requête : un compte désactivé perd l'accès tout de suite, même avec un cookie encore valide.
     o.Events.OnValidatePrincipal = async ctx =>
     {
