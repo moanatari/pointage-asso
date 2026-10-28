@@ -32,7 +32,7 @@
             <td>@r.Presence.Day.ToString("dd/MM/yyyy")</td>
             <td>@r.Presence.ArrivedAt.ToString("HH:mm")</td>
             <td>@(r.Presence.DepartedAt?.ToString("HH:mm") ?? "—")</td>
-            <td>@(r.Presence.Status switch { PresenceStatus.Validated => "validé", PresenceStatus.Refused => "refusé", _ => "en attente" })</td>
+            <td>@r.Presence.Status.Label()</td>
             <td>@(r.Presence.Source == PresenceSource.Kiosk ? "borne" : "ajout manuel")</td>
         </tr>
     }

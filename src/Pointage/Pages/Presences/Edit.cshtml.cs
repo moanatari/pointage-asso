@@ -64,7 +64,7 @@ public class EditModel(PresenceStore presences, MemberStore members, AuditLog au
     {
         if (!Load(id)) return NotFound();
         presences.Decide(id, status, User.AccountId());
-        audit.Write(User.AccountId(), action, Presence.MemberId, $"Présence n° {id} : {Presence.Status} → {status}");
+        audit.Write(User.AccountId(), action, Presence.MemberId, $"Présence n° {id} : {Presence.Status.Label()} → {status.Label()}");
         return RedirectToPage("/Members/Details", new { id = Presence.MemberId });
     }
 
@@ -73,7 +73,7 @@ public class EditModel(PresenceStore presences, MemberStore members, AuditLog au
         if (!Load(id)) return NotFound();
         presences.Delete(id);
         audit.Write(User.AccountId(), AuditActions.PresenceDelete, Presence.MemberId,
-            $"Présence n° {id} du {Presence.Day:dd/MM/yyyy} {Presence.ArrivedAt:HH:mm} (statut {Presence.Status}) supprimée");
+            $"Présence n° {id} du {Presence.Day:dd/MM/yyyy} {Presence.ArrivedAt:HH:mm} (statut {Presence.Status.Label()}) supprimée");
         return RedirectToPage("/Members/Details", new { id = Presence.MemberId });
     }
 }

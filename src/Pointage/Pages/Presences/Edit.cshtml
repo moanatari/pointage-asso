@@ -1,10 +1,11 @@
 @page "{id:long}"
 @model Pointage.Pages.Presences.EditModel
+@using Pointage.Presences
 @{
     ViewData["Title"] = "Corriger une présence";
 }
 <h1>Corriger une présence</h1>
-<p><a href="/Members/Details/@Model.Presence.MemberId">@Model.MemberName</a> – @Model.Presence.Day.ToString("dd/MM/yyyy") – statut actuel : @Model.Presence.Status</p>
+<p><a href="/Members/Details/@Model.Presence.MemberId">@Model.MemberName</a> – @Model.Presence.Day.ToString("dd/MM/yyyy") – statut actuel : @Model.Presence.Status.Label()</p>
 @if (Model.Error is not null)
 {
     <p class="error">@Model.Error</p>

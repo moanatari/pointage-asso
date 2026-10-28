@@ -125,6 +125,25 @@ public class ManagerPagesTests
     }
 
     [Fact]
+    public async Task EditPresence_ShowsFrenchStatus_AndAuditsInFrench()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var lucas = CreateLucas(app);
+        var presences = app.Services.GetRequiredService<PresenceStore>();
+        var id = presences.AddManual(lucas.Id, new DateTime(2026, 10, 20, 9, 30, 0), 1); // validée d'office
+        var url = $"/Presences/Edit/{id}";
+
+        var html = await Text(await client.GetAsync(url));
+        Assert.Contains("statut actuel : validé", html);
+        Assert.DoesNotContain("Validated", html);
+
+        (await AppFactory.PostFormAsync(client, url, url + "?handler=Refuse", [])).EnsureSuccessStatusCode();
+        var entry = Assert.Single(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.Refuse);
+        Assert.Contains("validé → refusé", entry.Details);
+    }
+
+    [Fact]
     public async Task Card_ShowsFirstNameAndCode()
     {
         using var app = new AppFactory();

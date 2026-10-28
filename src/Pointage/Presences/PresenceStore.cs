@@ -7,6 +7,17 @@ namespace Pointage.Presences;
 
 public enum PresenceStatus { Pending, Validated, Refused }
 
+public static class PresenceStatusExtensions
+{
+    // Libellé français : l'interface n'affiche jamais le nom de l'enum.
+    public static string Label(this PresenceStatus s) => s switch
+    {
+        PresenceStatus.Validated => "validé",
+        PresenceStatus.Refused => "refusé",
+        _ => "en attente",
+    };
+}
+
 public enum PresenceSource { Kiosk, Manual }
 
 public enum CheckInResult { Created, AlreadyToday }
