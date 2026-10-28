@@ -7,8 +7,8 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
-  <!-- Uniquement à la publication (« dotnet publish ») : un seul Pointage.exe qui embarque .NET, sans rien à installer sur le poste.
-       Hors publication, build et tests restent indépendants de la plateforme. -->
+  <!-- Uniquement Ã  la publication (Â« dotnet publish Â») : un seul Pointage.exe qui embarque .NET, sans rien Ã  installer sur le poste.
+       Hors publication, build et tests restent indÃ©pendants de la plateforme. -->
   <PropertyGroup Condition="'$(_IsPublishing)' == 'true'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
