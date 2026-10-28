@@ -1,0 +1,70 @@
+@page
+@model Pointage.Pages.HistoryModel
+@{
+    ViewData["Title"] = "Historique";
+    var p = Model.Current;
+    var fromInput = p.From.ToString("yyyy-MM-dd");
+    var toInput = p.To.ToString("yyyy-MM-dd");
+    // Même échelle que la fiche membre : la plus grande barre fait 100 %, et 1 évite la division par zéro.
+    var max = Math.Max(1, Model.Stats.PerDay.Select(d => d.Members).DefaultIfEmpty(0).Max());
+}
+<h1>Historique du @p.From.ToString("dd/MM/yyyy") au @p.To.ToString("dd/MM/yyyy")</h1>
+
+<div class="row-actions">
+    <a href="/History?preset=yesterday"><button type="button">Hier</button></a>
+    <a href="/History?preset=thisweek"><button type="button">Cette semaine</button></a>
+    <a href="/History?preset=lastweek"><button type="button">Semaine dernière</button></a>
+    <a href="/History?preset=thismonth"><button type="button">Ce mois-ci</button></a>
+    <a href="/History?preset=lastmonth"><button type="button">Mois dernier</button></a>
+</div>
+<form method="get" class="row-actions">
+    <input type="hidden" name="preset" value="custom">
+    <label>Du <input type="date" name="from" value="@fromInput"></label>
+    <label>au <input type="date" name="to" value="@toInput"></label>
+    <button type="submit">Afficher</button>
+</form>
+
+<h2>Présences par jour</h2>
+@if (Model.Stats.PerDay.Count == 0)
+{
+    <p>Aucune présence validée sur cette période.</p>
+}
+@foreach (var d in Model.Stats.PerDay)
+{
+    <div class="bar-row"><span>@d.Day.ToString("dd/MM")</span><div class="bar" style="width: @(d.Members * 100 / max)%"></div><span>@d.Members</span></div>
+}
+<p><strong>@Model.Stats.TotalPresences présences · @Model.Stats.DistinctMembers membres différents</strong></p>
+
+<h2>Qui est venu</h2>
+<p>
+    Trier par : <a href="/History?@Model.PeriodQuery&sort=name">nom</a> · <a href="/History?@Model.PeriodQuery&sort=days">nombre de venues</a>
+    – <a href="/History?handler=Csv&@Model.PeriodQuery">Exporter en CSV</a>
+</p>
+<table>
+    <thead><tr><th>Nom</th><th>Code</th><th>Jours de présence</th></tr></thead>
+    <tbody>
+    @foreach (var m in Model.PerMember)
+    {
+        <tr><td>@m.FullName</td><td>@m.Code</td><td>@m.Days</td></tr>
+    }
+    </tbody>
+</table>
+
+<h2>Détail des pointages</h2>
+<table>
+    <thead><tr><th>Date</th><th>Membre</th><th>Arrivée</th><th>Départ</th><th>Statut</th><th>Par</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var r in Model.Rows)
+    {
+        <tr>
+            <td>@r.Presence.Day.ToString("dd/MM/yyyy")</td>
+            <td>@r.MemberName</td>
+            <td>@r.Presence.ArrivedAt.ToString("HH:mm")</td>
+            <td>@(r.Presence.DepartedAt?.ToString("HH:mm") ?? "—")</td>
+            <td>@Model.StatusLabel(r.Presence)</td>
+            <td>@r.DecidedByName</td>
+            <td><a href="/Presences/Edit/@r.Presence.Id">Corriger</a></td>
+        </tr>
+    }
+    </tbody>
+</table>
