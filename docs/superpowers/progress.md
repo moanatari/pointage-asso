@@ -24,6 +24,6 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 11 | Réglages, comptes, purge, journal | sonnet | fait | feature/11-admin | PR #11 | AccessDenied 403 pour les responsables ; libellés FR du journal (AuditActions.Label) |
 | 12 | Mises à jour GitHub | opus | fait | feature/12-mises-a-jour | PR #12 | dossier de téléchargement privé par mise à jour ; ACL du dossier de données → tâche 13 |
 | 13 | Installateur, CI, script de la borne | sonnet | fait | feature/13-installateur | PR #13 | iss non compilé localement ; test VM à faire ; ACL ProgramDataPointage SYSTEM+Admins |
-| 14 | Documentation | haiku | à faire | | | |
+| 14 | Documentation | haiku | fait | feature/14-documentation | PR #14 | AGENTS.md réécrit (passe /init) ; README liste ce qui reste à vérifier |
 
 États possibles : à faire · en cours · en relecture · PR ouverte · fait.
