@@ -22,7 +22,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 9 | Historique | haiku | fait | feature/09-historique | PR #9 | anonymisés triés en tête avec sort=name (mineur) |
 | 10 | Import CSV | sonnet | fait | feature/10-import | PR #10 | doublons dans le fichier aussi ignorés ; confirm re-analyse côté serveur |
 | 11 | Réglages, comptes, purge, journal | sonnet | fait | feature/11-admin | PR #11 | AccessDenied 403 pour les responsables ; libellés FR du journal (AuditActions.Label) |
-| 12 | Mises à jour GitHub | opus | à faire | | | |
+| 12 | Mises à jour GitHub | opus | fait | feature/12-mises-a-jour | PR #12 | dossier de téléchargement privé par mise à jour ; ACL du dossier de données → tâche 13 |
 | 13 | Installateur, CI, script de la borne | sonnet | à faire | | | |
 | 14 | Documentation | haiku | à faire | | | |
 
