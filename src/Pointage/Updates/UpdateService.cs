@@ -60,7 +60,18 @@ public sealed partial class UpdateService(HttpClient http, IConfiguration config
         }
     }
 
+    private int applying;
+
+    // Un double clic ou deux responsables simultanés ne doivent pas lancer deux installateurs silencieux en même temps.
     public async Task ApplyAsync(ReleaseInfo r, CancellationToken ct)
+    {
+        if (Interlocked.Exchange(ref applying, 1) == 1)
+            throw new InvalidOperationException("Une mise à jour est déjà en cours.");
+        try { await DownloadAndLaunchAsync(r, ct); }
+        finally { Volatile.Write(ref applying, 0); }
+    }
+
+    private async Task DownloadAndLaunchAsync(ReleaseInfo r, CancellationToken ct)
     {
         var repo = Repo() ?? throw new InvalidOperationException("Dépôt de mise à jour non configuré.");
         // Contrôle avant tout téléchargement. Le service tourne en LocalSystem : seul un fichier publié
@@ -83,6 +94,8 @@ public sealed partial class UpdateService(HttpClient http, IConfiguration config
         if (!HashMatches(file, expected))
             throw new InvalidOperationException("Le fichier téléchargé est corrompu ou modifié.");
         Launch(setupPath);
+        // L'installateur remplace l'application : plus rien à proposer, et pas de second lancement possible depuis la page.
+        Latest = null;
     }
 
     // Le service tourne en LocalSystem et un utilisateur standard peut créer des dossiers sous ProgramData :
