@@ -17,7 +17,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 4 | Présences | sonnet | fait | feature/04-presences | PR #4 | règle du jour dans AllowsNewPresence ; corrections sans revérification (décision) |
 | 5 | Statistiques | sonnet | fait | feature/05-stats | PR #5 | PerWeekday contient les 7 jours ; tri PerMember jours puis nom puis prénom |
 | 6 | Web : accès local, setup, connexion | opus | fait | feature/06-web | PR #6 | pages responsable 404 hors loopback ; lecture DateTime tolère fractions ; AccessDeniedPath à faire en T11 |
-| 7 | Borne : liaison, API, kiosque | opus | à faire | | | |
+| 7 | Borne : liaison, API, kiosque | opus | fait | feature/07-borne | PR #7 | parcours navigateur réel à faire ; KioskPair journalisé à l'émission du code |
 | 8 | Écrans du responsable | sonnet | à faire | | | |
 | 9 | Historique | haiku | à faire | | | |
 | 10 | Import CSV | sonnet | à faire | | | |

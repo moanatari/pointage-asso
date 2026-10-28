@@ -10,3 +10,6 @@ main { max-width: 60rem; margin: 0 auto; padding: 1rem; }
 fieldset { display: flex; flex-direction: column; gap: .75rem; }
 .error { color: #b00020; }
 button { padding: .4rem .9rem; cursor: pointer; }
+.pairing-code { font-size: 3.5rem; font-weight: bold; letter-spacing: .3em; margin: .5rem 0; }
+table { border-collapse: collapse; }
+th, td { padding: .4rem .8rem; border-bottom: 1px solid #ddd; text-align: left; }

@@ -1,0 +1,20 @@
+/* Borne tactile : gros boutons, gros texte, lisible par un enfant à bout de bras. */
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; color: #222; background: #f3f6fa; font-size: 1.4rem; text-align: center; }
+h1 { font-size: 2.2rem; margin: .5rem 0 1rem; }
+input { font-size: 2rem; padding: .6rem 1rem; width: min(100%, 36rem); border: 2px solid #2f5d8a; border-radius: .5rem; }
+button { font-size: 1.5rem; padding: .8rem 1.4rem; border: 0; border-radius: .6rem; background: #2f5d8a; color: #fff; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.pair { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.results { list-style: none; padding: 0; margin: 1rem auto; display: flex; flex-direction: column; gap: .6rem; width: min(100%, 36rem); }
+.member { width: 100%; font-size: 1.8rem; background: #fff; color: #222; border: 2px solid #2f5d8a; }
+.keyboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr)); gap: .4rem; max-width: 52rem; margin: 1rem auto 0; }
+.keyboard button { padding: .8rem 0; }
+.keyboard .erase { grid-column: span 3; background: #8a2f2f; }
+.who { font-size: 2.6rem; font-weight: bold; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+.yes { background: #2e7d32; font-size: 2rem; }
+.no { background: #757575; }
+.leave { background: #ef6c00; }
+.message { font-size: 2.2rem; margin-top: 3rem; }
+.error { color: #b00020; font-weight: bold; }
