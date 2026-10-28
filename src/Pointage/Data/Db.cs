@@ -36,6 +36,7 @@ public sealed class Db(string path)
     {
         SqlMapper.AddTypeHandler(new DateOnlyHandler());
         SqlMapper.AddTypeHandler(new TimeOnlyHandler());
+        SqlMapper.AddTypeHandler(new DateTimeHandler());
     }
 
     public string Path { get; } = path;
@@ -76,6 +77,13 @@ public sealed class Db(string path)
     {
         public override void SetValue(IDbDataParameter p, DateOnly v) => p.Value = v.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         public override DateOnly Parse(object v) => DateOnly.ParseExact((string)v, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    // Format de largeur fixe : les comparaisons de texte SQL (at < @cutoff) restent chronologiques.
+    private sealed class DateTimeHandler : SqlMapper.TypeHandler<DateTime>
+    {
+        public override void SetValue(IDbDataParameter p, DateTime v) => p.Value = v.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        public override DateTime Parse(object v) => DateTime.ParseExact((string)v, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
     }
 
     private sealed class TimeOnlyHandler : SqlMapper.TypeHandler<TimeOnly>
