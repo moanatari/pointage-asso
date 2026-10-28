@@ -58,7 +58,7 @@ Une ligne de la table `presences` = un passage (arrivée, départ facultatif). S
 ```
 
 - La borne crée toujours une présence `Pending` (`PresenceStore.CheckIn`). Un ajout manuel par un responsable (`AddManual`, y compris pour un jour passé) est validé directement.
-- Le responsable valide ou refuse depuis l'accueil (`Decide`, ou `ValidateAllPendingToday` pour « Tout valider »). Le responsable qui décide et l'heure sont enregistrés.
+- Le responsable valide ou refuse depuis l'accueil (`Decide`, ou `ValidateMany` pour « Tout valider », limité aux arrivées affichées à l'écran). Le responsable qui décide et l'heure sont enregistrés.
 - Un refus reste dans l'historique. Un membre refusé peut pointer à nouveau.
 - Corrections (fiche du membre, écran `Presences/Edit`) : passer de validé à refusé et inversement, corriger les heures d'arrivée et de départ (la date ne change pas), ou supprimer. Chaque correction est inscrite au journal avec l'ancienne et la nouvelle valeur.
 - Une présence encore `Pending` à la fin de la journée le reste (affichée « en attente » dans l'historique). Les statistiques ne comptent que les présences `Validated`, en jours distincts.

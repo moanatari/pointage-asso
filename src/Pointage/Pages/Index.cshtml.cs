@@ -33,9 +33,9 @@ public class IndexModel(PresenceStore presences, AuditLog audit) : PageModel
         return RedirectToPage();
     }
 
-    public IActionResult OnPostValidateAll()
+    public IActionResult OnPostValidateAll(long[] ids)
     {
-        var count = presences.ValidateAllPendingToday(User.AccountId());
+        var count = presences.ValidateMany(ids, User.AccountId());
         audit.Write(User.AccountId(), AuditActions.Validate, details: $"{count} arrivée(s) validée(s) d'un coup");
         return RedirectToPage();
     }

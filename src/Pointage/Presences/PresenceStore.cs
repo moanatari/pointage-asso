@@ -116,11 +116,13 @@ public sealed class PresenceStore(Db db, TimeProvider time)
             new { presenceId, status = status.ToString(), accountId, now = time.Now() });
     }
 
-    public int ValidateAllPendingToday(long accountId)
+    // « Tout valider » ne valide que les arrivées que le responsable a vues à l'écran (ids envoyés par la page),
+    // jamais celles arrivées depuis : sinon la validation humaine ne protège plus de la fraude.
+    public int ValidateMany(IEnumerable<long> ids, long accountId)
     {
         using var c = db.Open();
-        return c.Execute("UPDATE presences SET status='Validated', decided_by=@accountId, decided_at=@now WHERE status='Pending' AND day=@today",
-            new { accountId, today = time.Today(), now = time.Now() });
+        return c.Execute("UPDATE presences SET status='Validated', decided_by=@accountId, decided_at=@now WHERE status='Pending' AND id IN @ids",
+            new { accountId, ids = ids.ToArray(), now = time.Now() });
     }
 
     public void UpdateTimes(long presenceId, DateTime arrivedAt, DateTime? departedAt)

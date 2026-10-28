@@ -14,7 +14,13 @@
         <h2>À valider (@Model.Pending.Count)</h2>
         @if (Model.Pending.Count > 0)
         {
-            <form method="post" asp-page-handler="ValidateAll"><button type="submit">Tout valider</button></form>
+            <form method="post" asp-page-handler="ValidateAll">
+                @foreach (var r in Model.Pending)
+                {
+                    <input type="hidden" name="ids" value="@r.Presence.Id" />
+                }
+                <button type="submit">Tout valider</button>
+            </form>
         }
         <ul class="plain">
         @foreach (var r in Model.Pending)
