@@ -86,7 +86,10 @@ public class PurgeTests
         presences.AddManual(old.Id, new DateTime(2020, 1, 1, 9, 0, 0), admin);
         presences.AddManual(recent.Id, DateTime.Now, admin);
         var audit = app.Services.GetRequiredService<AuditLog>();
-        audit.Write(admin, AuditActions.Login);
+        audit.Write(admin, AuditActions.Login);   // sera vieillie : hors conservation
+        audit.Write(admin, AuditActions.Validate); // récente : doit rester
+        using (var c = app.Services.GetRequiredService<Db>().Open())
+            c.Execute("UPDATE audit SET at='2000-01-01 09:00:00' WHERE action=@a", new { a = AuditActions.Login });
 
         Assert.Contains("Anonymiser ces 1 membres", WebUtility.HtmlDecode(await client.GetStringAsync("/Admin/Purge")));
         (await AppFactory.PostFormAsync(client, "/Admin/Purge", "/Admin/Purge", [])).EnsureSuccessStatusCode();
@@ -96,6 +99,10 @@ public class PurgeTests
         Assert.Empty(members.MembersToPurge(DateOnly.FromDateTime(DateTime.Now), 12));
         var entry = Assert.Single(audit.Recent(50), e => e.Action == AuditActions.Purge);
         Assert.Contains("1", entry.Details);
+        // Le journal suit la durée de conservation : l'ancienne entrée part, la récente et la purge restent.
+        var actions = audit.Recent(50).Select(e => e.Action).ToList();
+        Assert.DoesNotContain(AuditActions.Login, actions);
+        Assert.Contains(AuditActions.Validate, actions);
     }
 
     [Fact]
@@ -138,7 +145,7 @@ public class PurgeTests
 
         Assert.Equal(new AppSettings("Judo Club", 24, false, true), app.Services.GetRequiredService<SettingsStore>().Get());
         Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.Settings);
-        Assert.Contains("Settings", await client.GetStringAsync("/Admin/Journal")); // le journal affiche l'entrée
+        Assert.Contains("Réglages", WebUtility.HtmlDecode(await client.GetStringAsync("/Admin/Journal"))); // libellé français, pas le code
 
         var bad = await AppFactory.PostFormAsync(client, "/Admin/Settings", "/Admin/Settings", new() { ["RetentionMonths"] = "0" });
         Assert.Contains("entre 1 et 120", WebUtility.HtmlDecode(await bad.Content.ReadAsStringAsync()));

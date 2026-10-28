@@ -17,7 +17,7 @@ public class JournalModel(AuditLog audit, AccountStore accounts, MemberStore mem
         Lines = audit.Recent(200).Select(e => new JournalLine(
             e.At,
             e.AccountId is { } a ? names.GetValueOrDefault(a, $"compte n° {a}") : "—",
-            e.Action,
+            AuditActions.Label(e.Action),
             e.MemberId is { } m ? members.Get(m)?.FullName ?? $"membre supprimé n° {m}" : null,
             e.Details)).ToList();
     }
