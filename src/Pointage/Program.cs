@@ -8,6 +8,7 @@ using Pointage.Members;
 using Pointage.Presences;
 using Pointage.Settings;
 using Pointage.Stats;
+using Pointage.Updates;
 using Pointage.Web;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,12 @@ builder.Services.AddSingleton<MemberStore>();
 builder.Services.AddSingleton<PresenceStore>();
 builder.Services.AddSingleton<StatsService>();
 builder.Services.AddSingleton<KioskPairing>();
+// Singleton (et non client typé transitoire) : la dernière version trouvée par le worker doit être vue par la page.
+// ponytail: HttpClient gardé à vie, sans rotation DNS ; acceptable pour un appel par jour.
+builder.Services.AddHttpClient(nameof(UpdateService));
+builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<UpdateService>(sp,
+    sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(UpdateService))));
+builder.Services.AddHostedService<UpdateCheckWorker>();
 
 builder.Services.AddRazorPages(o =>
 {

@@ -1,0 +1,21 @@
+@page
+@model Pointage.Pages.Admin.UpdateModel
+@{
+    ViewData["Title"] = "Mises à jour";
+}
+<h1>Mises à jour</h1>
+<p>Version installée : @Pointage.Updates.UpdateService.Current.ToString(3)</p>
+@if (Model.Message is { } message)
+{
+    <p>@message</p>
+}
+@if (Model.Latest is { } latest)
+{
+    <p>Version @latest.Version disponible</p>
+    <form method="post" asp-page-handler="Apply" onsubmit="return confirm('Le logiciel va redémarrer. Continuer ?')">
+        <button type="submit">Mettre à jour</button>
+    </form>
+}
+<form method="post" asp-page-handler="Check">
+    <button type="submit">Vérifier maintenant</button>
+</form>
