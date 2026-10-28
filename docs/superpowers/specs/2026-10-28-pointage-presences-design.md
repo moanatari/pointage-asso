@@ -93,6 +93,10 @@ La venue est **libre** [décidé] : il n'y a pas de jours prévus, donc pas de n
 - Heure de départ : optionnelle (voir §6).
 - **Un refus reste dans l'historique** avec la mention « refusé » [décidé].
 - [choix du concepteur] Un membre a au plus **une présence non refusée par jour**. S'il pointe une deuxième fois, la borne affiche « Déjà noté aujourd'hui » sans créer de doublon. S'il a été refusé, il peut pointer à nouveau.
+  - **Évolution prévue [décidé]** : pouvoir pointer plusieurs fois dans une même journée (aller-retours), chaque passage ayant son arrivée et son départ éventuel. Pour que ce changement reste petit :
+    - la règle « une présence par jour » est vérifiée **à un seul endroit du code**, sans contrainte d'unicité (membre + jour) dans la base ;
+    - chaque ligne de présence représente déjà **un passage** (arrivée + départ optionnel), pas une journée ;
+    - les statistiques comptent des **jours de présence distincts**, pour qu'elles restent justes quand un membre aura plusieurs passages dans la même journée.
 - [choix du concepteur] Une présence encore « en attente » à la fin de la journée le reste, et l'historique l'affiche comme « non validée ». **Les statistiques ne comptent que les présences validées.**
 - Une « journée » correspond au jour calendaire, à l'heure locale du poste.
 
@@ -218,6 +222,7 @@ Les déclarations à la CNIL n'existent plus depuis 2018. Ce qui suit répond au
 - HTTPS sur le réseau local.
 - Import CSV plus riche (correspondance de colonnes libre, import Excel `.xlsx`, mise à jour des membres existants).
 - Certificat de signature de code.
+- Plusieurs passages par jour (voir §5, la structure est déjà prévue pour).
 
 ## 12. Code, documentation et tests
 
