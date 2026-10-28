@@ -1,9 +1,11 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Pointage.Accounts;
 
 namespace Pointage.Tests;
@@ -21,8 +23,15 @@ public sealed partial class AppFactory(string? remoteIp = "127.0.0.1") : WebAppl
         builder.UseSetting("Pointage:DataDir", dataDir);
         // Dépôt vide : le worker de mises à jour ne fait aucun appel réseau pendant les tests.
         builder.UseSetting("Pointage:GitHubRepo", "");
-        builder.ConfigureServices(s => s.AddSingleton<IStartupFilter>(new RemoteIpFilter(remoteIp)));
+        builder.ConfigureServices(s =>
+        {
+            s.AddSingleton<IStartupFilter>(new RemoteIpFilter(remoteIp));
+            // Horloge du cookie de connexion pilotable : permet de tester la session glissante sans attendre.
+            s.PostConfigure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, o => o.TimeProvider = AuthClock);
+        });
     }
+
+    public FakeTimeProvider AuthClock { get; } = new(DateTimeOffset.UtcNow);
 
     public async Task<HttpClient> LoggedInClientAsync(Role role)
     {

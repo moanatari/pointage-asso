@@ -15,6 +15,8 @@
 ; Identifiant fixe : il permet à une nouvelle version de remplacer la précédente au lieu de s'installer à côté.
 AppId={{6B0C1E5A-3F7D-4C2B-9A8E-5D1F0B7C4E21}
 AppName=Pointage
+; Un seul installateur à la fois (mise à jour silencieuse lancée deux fois, ou en même temps qu'un lancement manuel).
+SetupMutex=PointageSetup
 AppVersion={#MyAppVersion}
 AppPublisher=Pointage
 DefaultDirName={autopf}\Pointage

@@ -146,6 +146,52 @@ public class UpdateTests
     }
 
     [Fact]
+    public async Task Apply_Concurrent_LaunchesOnlyOnce()
+    {
+        using var entered = new ManualResetEventSlim();
+        using var gate = new ManualResetEventSlim();
+        var service = Service(req =>
+        {
+            entered.Set();
+            gate.Wait(TimeSpan.FromSeconds(10)); // garde le premier appel en plein téléchargement
+            return GoodRelease(req);
+        });
+        var launches = 0;
+        service.Launch = _ => Interlocked.Increment(ref launches);
+
+        var first = Task.Run(() => service.ApplyAsync(Release, CancellationToken.None));
+        Assert.True(entered.Wait(TimeSpan.FromSeconds(10)));
+        var e = await Assert.ThrowsAsync<InvalidOperationException>(() => service.ApplyAsync(Release, CancellationToken.None));
+        Assert.Equal("Une mise à jour est déjà en cours.", e.Message);
+        gate.Set();
+        await first;
+
+        Assert.Equal(1, launches);
+        // Le drapeau est relâché : un nouvel essai (après un échec, par exemple) reste possible.
+        await service.ApplyAsync(Release, CancellationToken.None);
+        Assert.Equal(2, launches);
+    }
+
+    [Fact]
+    public async Task Apply_AfterLaunch_ClearsLatest()
+    {
+        var service = Service(req => req.RequestUri!.Host == "api.github.com"
+            ? Json($$"""
+                {"tag_name":"v9.9.9","assets":[
+                  {"name":"Pointage-Setup.exe","browser_download_url":"{{Download}}Pointage-Setup.exe"},
+                  {"name":"Pointage-Setup.exe.sha256","browser_download_url":"{{Download}}Pointage-Setup.exe.sha256"}]}
+                """)
+            : GoodRelease(req));
+        service.Launch = _ => { };
+        await service.CheckAsync(CancellationToken.None);
+        Assert.NotNull(service.Latest);
+
+        await service.ApplyAsync(service.Latest!, CancellationToken.None);
+
+        Assert.Null(service.Latest);
+    }
+
+    [Fact]
     public async Task Apply_UpdatesIsJunction_ThrowsWithoutLaunching()
     {
         var db = TestDb.Create(out _);

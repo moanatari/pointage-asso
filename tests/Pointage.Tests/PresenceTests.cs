@@ -111,14 +111,27 @@ public class PresenceTests
     }
 
     [Fact]
-    public void ValidateAllPendingToday_IgnoresYesterday()
+    public void ValidateMany_OnlyValidatesGivenPendingIds_NotLateArrivals()
     {
-        var yesterday = _store.AddManual(_lucas, new DateTime(2026, 10, 26, 10, 0, 0), _admin);
-        using (var c = _db.Open()) Dapper.SqlMapper.Execute(c, "UPDATE presences SET status='Pending' WHERE id=@yesterday", new { yesterday });
+        var other = new MemberStore(_db, _time).Create(new MemberInput("Martin", "Léa", new DateOnly(2014, 1, 2), null, null, null, NoContact)).Id;
         _store.CheckIn(_lucas);
-        Assert.Equal(1, _store.ValidateAllPendingToday(_admin));
-        Assert.Equal(PresenceStatus.Pending, _store.Get(yesterday)!.Status);
-        Assert.Single(_store.ValidatedToday());
+        var shown = _store.PendingToday().Select(r => r.Presence.Id).ToList(); // ce que la page a affiché
+        _store.CheckIn(other); // arrivée après le rendu de la page
+        Assert.Equal(1, _store.ValidateMany(shown, _admin));
+        Assert.Equal(PresenceStatus.Validated, _store.Get(shown[0])!.Status);
+        var late = Assert.Single(_store.PendingToday());
+        Assert.Equal(other, late.Presence.MemberId);
+    }
+
+    [Fact]
+    public void ValidateMany_SkipsAlreadyDecided()
+    {
+        _store.CheckIn(_lucas);
+        var id = _store.PendingToday().Single().Presence.Id;
+        _store.Decide(id, PresenceStatus.Refused, _admin); // refusée entre-temps par un autre responsable
+        Assert.Equal(0, _store.ValidateMany([id], _admin));
+        Assert.Equal(PresenceStatus.Refused, _store.Get(id)!.Status);
+        Assert.Equal(0, _store.ValidateMany([], _admin));
     }
 
     [Fact]

@@ -25,14 +25,19 @@ Suivre la fréquentation de l'association, savoir qui est présent, établir des
 **Qui peut voir ces données ?**
 Seulement les responsables et bénévoles de l'association qui utilisent le logiciel. Les données restent sur l'ordinateur de l'association : elles ne sont pas envoyées sur Internet ni transmises à d'autres organismes. [Ajouter ici tout destinataire extérieur, ou supprimer cette mention.] À la borne, un enfant ne voit que les prénoms et l'initiale du nom des personnes qu'il recherche.
 
+**Sur quelle base légale ?**
+Base légale : [intérêt légitime / consentement : à choisir]
+
 **Combien de temps ?**
-Si la personne ne vient plus pendant [12] mois, ses informations personnelles sont effacées (anonymisées) : il ne reste que des chiffres de fréquentation, sans nom.
+Les informations d'une personne qui ne vient plus depuis [12] mois sont effacées (anonymisées) lors de la purge que nous faisons au moins [N] fois par an : il ne reste alors que des chiffres de fréquentation, sans nom.
 
 **Quels sont vos droits ?**
 Vous pouvez à tout moment, pour vous ou pour votre enfant :
 - demander à voir les données que nous avons (nous vous les remettons sous une forme lisible) ;
 - les faire corriger ;
-- demander leur effacement, ou vous opposer à leur utilisation.
+- demander leur effacement ;
+- demander la limitation de leur utilisation ;
+- vous opposer à leur utilisation.
 
 Pour cela, contactez [nom, fonction] : [e-mail] / [téléphone] / [adresse]. Nous répondons dans un délai d'un mois. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (<https://www.cnil.fr/plaintes>).
 

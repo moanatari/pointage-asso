@@ -57,15 +57,44 @@ public class ManagerPagesTests
     }
 
     [Fact]
-    public async Task Home_ValidateAll_ValidatesEveryPending()
+    public async Task Home_ValidateAll_ValidatesOnlyDisplayedArrivals()
     {
         using var app = new AppFactory();
         var client = await app.LoggedInClientAsync(Role.Manager);
         var presences = app.Services.GetRequiredService<PresenceStore>();
-        presences.CheckIn(CreateLucas(app).Id);
-        (await AppFactory.PostFormAsync(client, "/", "/?handler=ValidateAll", [])).EnsureSuccessStatusCode();
-        Assert.Empty(presences.PendingToday());
-        Assert.Single(presences.ValidatedToday());
+        var lucas = CreateLucas(app);
+        var lea = app.Services.GetRequiredService<MemberStore>()
+            .Create(new MemberInput("Martin", "Léa", new DateOnly(2014, 1, 2), null, null, null, new ContactInput(null, null, null, null, null)));
+        presences.CheckIn(lucas.Id);
+        var shown = Assert.Single(presences.PendingToday()).Presence.Id;
+        var html = await client.GetStringAsync("/"); // rendu de la page : une seule arrivée affichée
+        Assert.Contains($"name=\"ids\" value=\"{shown}\"", html);
+
+        presences.CheckIn(lea.Id); // arrivée après le rendu
+        var response = await client.PostAsync("/?handler=ValidateAll", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["ids"] = shown.ToString(), ["__RequestVerificationToken"] = AppFactory.AntiforgeryToken(html),
+        }));
+        response.EnsureSuccessStatusCode();
+
+        Assert.Equal(PresenceStatus.Validated, presences.Get(shown)!.Status);
+        Assert.Equal(lea.Id, Assert.Single(presences.PendingToday()).Presence.MemberId);
+    }
+
+    [Fact]
+    public async Task Home_AutoRefresh_DoesNotRenewSession_ButNormalRequestDoes()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        app.AuthClock.Advance(TimeSpan.FromMinutes(20)); // au-delà de la moitié de la session : le renouvellement est dû
+
+        var auto = await client.GetAsync("/?auto=1");
+        auto.EnsureSuccessStatusCode();
+        Assert.False(auto.Headers.TryGetValues("Set-Cookie", out var renewed) && renewed.Any(c => c.StartsWith("pointage_auth=")));
+
+        var normal = await client.GetAsync("/");
+        normal.EnsureSuccessStatusCode();
+        Assert.Contains(normal.Headers.GetValues("Set-Cookie"), c => c.StartsWith("pointage_auth="));
     }
 
     [Fact]
