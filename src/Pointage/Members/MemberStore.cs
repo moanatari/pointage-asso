@@ -178,4 +178,25 @@ public sealed class MemberStore(Db db, TimeProvider time)
             WHERE id=@id AND anonymized_at IS NULL
             """, new { id, now = time.Now() });
     }
+
+    // Dernière venue réelle : une présence refusée n'est pas une venue.
+    public DateOnly? LastVisit(long id)
+    {
+        using var c = db.Open();
+        var day = c.ExecuteScalar<string?>("SELECT MAX(day) FROM presences WHERE member_id=@id AND status<>'Refused'", new { id });
+        return day is null ? null : DateOnly.ParseExact(day, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    // Sans aucune venue, la date de création sert de référence : un membre inscrit puis jamais revenu finit aussi par être purgé.
+    public IReadOnlyList<Member> MembersToPurge(DateOnly today, int retentionMonths)
+    {
+        using var c = db.Open();
+        return c.Query<Row>(
+            $"""
+            SELECT {Columns} FROM members m
+            WHERE anonymized_at IS NULL
+              AND COALESCE((SELECT MAX(day) FROM presences p WHERE p.member_id=m.id AND p.status<>'Refused'), substr(created_at, 1, 10)) < @cutoff
+            ORDER BY last_name COLLATE NOCASE, first_name COLLATE NOCASE
+            """, new { cutoff = today.AddMonths(-retentionMonths) }).Select(r => r.ToMember()).ToList();
+    }
 }

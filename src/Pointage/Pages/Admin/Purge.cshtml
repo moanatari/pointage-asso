@@ -1,0 +1,34 @@
+@page
+@model Pointage.Pages.Admin.PurgeModel
+@{
+    ViewData["Title"] = "Purge RGPD";
+}
+<h1>Purge RGPD</h1>
+<p>Membres dont la dernière venue (ou, à défaut, l'inscription) date de plus de @Model.RetentionMonths mois.
+   Leurs données personnelles sont effacées ; les présences passées restent dans les statistiques.</p>
+@if (Model.Purged is { } n)
+{
+    <p>@n membre(s) anonymisé(s).</p>
+}
+@if (Model.Candidates.Count == 0)
+{
+    <p>Aucun membre à anonymiser.</p>
+}
+else
+{
+    <table>
+        <thead><tr><th>Membre</th><th>Dernière venue</th></tr></thead>
+        <tbody>
+        @foreach (var (m, last) in Model.Candidates)
+        {
+            <tr>
+                <td>@m.FullName</td>
+                <td>@(last is { } d ? d.ToString("dd/MM/yyyy") : "jamais venu")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <form method="post" onsubmit="return confirm('Cette action est définitive. Continuer ?')">
+        <button type="submit">Anonymiser ces @Model.Candidates.Count membres</button>
+    </form>
+}
