@@ -110,6 +110,22 @@ public class WebTests
     }
 
     [Fact]
+    public async Task NavLogout_SignsOut()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        // Le jeton est lu dans la page d'accueil (formulaire de la barre de navigation), pas sur /Logout.
+        var home = await client.GetStringAsync("/");
+        var response = await client.PostAsync("/Logout", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = AppFactory.AntiforgeryToken(home),
+        }));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("/Login", response.RequestMessage!.RequestUri!.AbsolutePath);
+        Assert.Equal("/Login", (await client.GetAsync("/")).RequestMessage!.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
     public async Task DeactivatedAccount_LiveCookie_IsSignedOut()
     {
         using var app = new AppFactory();
