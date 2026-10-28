@@ -1,0 +1,64 @@
+using Dapper;
+using Microsoft.Data.Sqlite;
+using Pointage.Data;
+
+namespace Pointage.Tests;
+
+public class DbTests
+{
+    private static Db NewDb() =>
+        new(Path.Combine(Directory.CreateTempSubdirectory("pointage-tests-").FullName, "pointage.db"));
+
+    [Fact]
+    public void Migrate_FreshDb_SetsUserVersionAndCreatesTables()
+    {
+        var db = NewDb();
+        db.Migrate();
+        using var c = db.Open();
+        Assert.Equal(Db.SchemaVersion, c.ExecuteScalar<int>("PRAGMA user_version"));
+        var tables = c.Query<string>("SELECT name FROM sqlite_master WHERE type='table'").ToHashSet();
+        foreach (var t in new[] { "members", "presences", "accounts", "audit", "settings", "kiosks" })
+            Assert.Contains(t, tables);
+    }
+
+    [Fact]
+    public void Migrate_Twice_IsIdempotent()
+    {
+        var db = NewDb();
+        db.Migrate();
+        db.Migrate();
+        using var c = db.Open();
+        Assert.Equal(Db.SchemaVersion, c.ExecuteScalar<int>("PRAGMA user_version"));
+    }
+
+    [Fact]
+    public void Migrate_OldDb_WritesTimestampedBackupFirst()
+    {
+        var db = NewDb();
+        using (var raw = new SqliteConnection($"Data Source={db.Path};Pooling=False"))
+        {
+            raw.Execute("CREATE TABLE dummy(x); PRAGMA user_version=0");
+        }
+        db.Migrate();
+        var dir = System.IO.Path.GetDirectoryName(db.Path)!;
+        Assert.Single(Directory.GetFiles(dir, "pointage-*.bak"));
+    }
+
+    [Fact]
+    public void Migrate_FreshDb_WritesNoBackup()
+    {
+        var db = NewDb();
+        db.Migrate();
+        Assert.Empty(Directory.GetFiles(System.IO.Path.GetDirectoryName(db.Path)!, "*.bak"));
+    }
+
+    [Fact]
+    public void Dapper_DateOnlyAndTimeOnly_RoundTripAsText()
+    {
+        using var c = TestDb.Create(out _).Open();
+        var (d, t) = c.QuerySingle<(DateOnly, TimeOnly)>("SELECT @d, @t", new { d = new DateOnly(2026, 10, 27), t = new TimeOnly(17, 5, 9) });
+        Assert.Equal(new DateOnly(2026, 10, 27), d);
+        Assert.Equal(new TimeOnly(17, 5, 9), t);
+        Assert.Equal("2026-10-27", c.ExecuteScalar<string>("SELECT @d", new { d = new DateOnly(2026, 10, 27) }));
+    }
+}

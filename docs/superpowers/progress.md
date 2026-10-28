@@ -11,7 +11,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 
 | # | Tâche | Modèle | État | Branche | PR | Notes |
 |---|-------|--------|------|---------|----|-------|
-| 1 | Solution, base et migrations | sonnet | à faire | | | |
+| 1 | Solution, base et migrations | sonnet | fait | feature/01-socle | PR #1 | .bak si base existante non vide et user_version < SchemaVersion |
 | 2 | Comptes, mots de passe, journal, réglages | sonnet | à faire | | | |
 | 3 | Membres | sonnet | à faire | | | |
 | 4 | Présences | sonnet | à faire | | | |
