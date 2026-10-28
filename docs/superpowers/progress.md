@@ -16,7 +16,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 3 | Membres | sonnet | fait | feature/03-membres | PR #3 | Create ne valide pas : appeler MemberInput.Validate avant |
 | 4 | Présences | sonnet | fait | feature/04-presences | PR #4 | règle du jour dans AllowsNewPresence ; corrections sans revérification (décision) |
 | 5 | Statistiques | sonnet | fait | feature/05-stats | PR #5 | PerWeekday contient les 7 jours ; tri PerMember jours puis nom puis prénom |
-| 6 | Web : accès local, setup, connexion | opus | à faire | | | |
+| 6 | Web : accès local, setup, connexion | opus | fait | feature/06-web | PR #6 | pages responsable 404 hors loopback ; lecture DateTime tolère fractions ; AccessDeniedPath à faire en T11 |
 | 7 | Borne : liaison, API, kiosque | opus | à faire | | | |
 | 8 | Écrans du responsable | sonnet | à faire | | | |
 | 9 | Historique | haiku | à faire | | | |
