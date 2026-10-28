@@ -43,6 +43,13 @@ public sealed partial class AppFactory(string? remoteIp = "127.0.0.1") : WebAppl
         return client;
     }
 
+    // Lit le jeton antiforgery dans le formulaire de la page, puis poste vers le gestionnaire voulu.
+    public static async Task<HttpResponseMessage> PostFormAsync(HttpClient c, string pageUrl, string handlerUrl, Dictionary<string, string> fields)
+    {
+        var token = AntiforgeryToken(await c.GetStringAsync(pageUrl));
+        return await c.PostAsync(handlerUrl, new FormUrlEncodedContent(new Dictionary<string, string>(fields) { ["__RequestVerificationToken"] = token }));
+    }
+
     public static string AntiforgeryToken(string html) => TokenRegex().Match(html).Groups[1].Value;
 
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]

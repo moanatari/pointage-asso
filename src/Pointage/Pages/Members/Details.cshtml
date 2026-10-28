@@ -1,0 +1,84 @@
+@page "{id:long}"
+@model Pointage.Pages.Members.DetailsModel
+@{
+    var m = Model.Member;
+    ViewData["Title"] = m.FullName;
+    var days = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+    var labels = new Dictionary<DayOfWeek, string>
+    {
+        [DayOfWeek.Monday] = "Lun", [DayOfWeek.Tuesday] = "Mar", [DayOfWeek.Wednesday] = "Mer", [DayOfWeek.Thursday] = "Jeu",
+        [DayOfWeek.Friday] = "Ven", [DayOfWeek.Saturday] = "Sam", [DayOfWeek.Sunday] = "Dim",
+    };
+    // Sam/Dim n'apparaissent que si le membre est déjà venu ces jours-là.
+    var shown = days.Where(d => d is not (DayOfWeek.Saturday or DayOfWeek.Sunday) || Model.Stats.PerWeekday[d] > 0).ToList();
+    var max = Math.Max(1, shown.Max(d => Model.Stats.PerWeekday[d]));
+}
+<h1>@m.FullName</h1>
+@if (m.AnonymizedAt is null)
+{
+    <p>
+        @(m.AgeOn(Model.Today)) ans – né(e) le @m.BirthDate?.ToString("dd/MM/yyyy") – code <strong>@m.Code</strong><br>
+        Téléphone : @(m.Phone ?? "—") – E-mail : @(m.Email ?? "—")
+    </p>
+    @if (m.Contact.LastName is not null || m.Contact.FirstName is not null || m.Contact.Phone is not null || m.Contact.Email is not null)
+    {
+        <p>
+            Personne à contacter : @m.Contact.FirstName @m.Contact.LastName
+            – @(m.Contact.Phone ?? "—") – @(m.Contact.Email ?? "—")
+        </p>
+    }
+    @if (m.Comment is not null)
+    {
+        <p>Commentaire : @m.Comment</p>
+    }
+}
+else
+{
+    <p class="muted">Données personnelles effacées le @m.AnonymizedAt?.ToString("dd/MM/yyyy"). Code : @m.Code</p>
+}
+
+<div class="row-actions">
+    @if (m.AnonymizedAt is null)
+    {
+        <a href="/Members/Edit/@m.Id"><button type="button">Modifier</button></a>
+        <a href="/Members/Card/@m.Id"><button type="button">Imprimer la carte</button></a>
+        <a href="/Members/Export/@m.Id"><button type="button">Exporter les données</button></a>
+        <form method="post" asp-page-handler="Anonymize" asp-route-id="@m.Id" onsubmit="return confirm('Anonymiser ce membre ? Ses données personnelles seront effacées, ses présences resteront dans les statistiques.')">
+            <button type="submit">Anonymiser</button>
+        </form>
+    }
+    <form method="post" asp-page-handler="Delete" asp-route-id="@m.Id" onsubmit="return confirm('Supprimer ce membre et toutes ses présences ? Cette action est irréversible.')">
+        <button type="submit">Supprimer</button>
+    </form>
+</div>
+
+<h2>Statistiques</h2>
+<div class="tiles">
+    <div class="tile">Dernière venue<strong>@(Model.Stats.LastVisit?.ToString("dd/MM/yyyy") ?? "—")</strong></div>
+    <div class="tile">Ce mois-ci<strong>@Model.Stats.DaysThisMonth</strong></div>
+    <div class="tile">Depuis septembre<strong>@Model.Stats.DaysThisSchoolYear</strong></div>
+</div>
+@foreach (var d in shown)
+{
+    var n = Model.Stats.PerWeekday[d];
+    <div class="bar-row"><span>@labels[d]</span><div class="bar" style="width: @(n * 100 / max)%"></div><span>@n</span></div>
+}
+<p>Heure d'arrivée habituelle : <strong>@(Model.Stats.UsualArrival?.ToString("HH:mm") ?? "—")</strong></p>
+
+<h2>Historique</h2>
+<table>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Statut</th><th>Par</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var r in Model.History)
+    {
+        <tr>
+            <td>@r.Presence.Day.ToString("dd/MM/yyyy")</td>
+            <td>@r.Presence.ArrivedAt.ToString("HH:mm")</td>
+            <td>@(r.Presence.DepartedAt?.ToString("HH:mm") ?? "—")</td>
+            <td>@Model.StatusLabel(r.Presence)</td>
+            <td>@r.DecidedByName</td>
+            <td><a href="/Presences/Edit/@r.Presence.Id">Corriger</a></td>
+        </tr>
+    }
+    </tbody>
+</table>

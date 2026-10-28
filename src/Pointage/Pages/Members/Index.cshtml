@@ -1,0 +1,29 @@
+@page
+@model Pointage.Pages.Members.IndexModel
+@{
+    ViewData["Title"] = "Membres";
+}
+<h1>Membres</h1>
+<form method="get" class="row-actions">
+    <input name="q" value="@Model.Q" placeholder="Rechercher (nom, prénom, code)" autofocus>
+    <button type="submit">Rechercher</button>
+    <a href="/Members/Edit"><button type="button">Nouveau membre</button></a>
+</form>
+<table>
+    <thead><tr><th>Nom</th><th>Prénom</th><th>Âge</th><th>Code</th></tr></thead>
+    <tbody>
+    @foreach (var m in Model.Results)
+    {
+        <tr>
+            <td><a href="/Members/Details/@m.Id">@m.LastName</a></td>
+            <td>@m.FirstName</td>
+            <td>@m.AgeOn(Model.Today)</td>
+            <td>@m.Code</td>
+        </tr>
+    }
+    </tbody>
+</table>
+@if (Model.Results.Count == 0)
+{
+    <p>Aucun membre trouvé.</p>
+}

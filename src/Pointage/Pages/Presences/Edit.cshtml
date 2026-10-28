@@ -1,0 +1,24 @@
+@page "{id:long}"
+@model Pointage.Pages.Presences.EditModel
+@using Pointage.Presences
+@{
+    ViewData["Title"] = "Corriger une présence";
+}
+<h1>Corriger une présence</h1>
+<p><a href="/Members/Details/@Model.Presence.MemberId">@Model.MemberName</a> – @Model.Presence.Day.ToString("dd/MM/yyyy") – statut actuel : @Model.Presence.Status.Label()</p>
+@if (Model.Error is not null)
+{
+    <p class="error">@Model.Error</p>
+}
+<form method="post" asp-page-handler="Save" asp-route-id="@Model.Presence.Id" class="stack">
+    <label>Arrivée <input type="time" name="ArrivedTime" value="@Model.ArrivedTime?.ToString("HH:mm")" required></label>
+    <label>Départ <input type="time" name="DepartedTime" value="@Model.DepartedTime?.ToString("HH:mm")"></label>
+    <button type="submit">Enregistrer</button>
+</form>
+<div class="row-actions">
+    <form method="post" asp-page-handler="Validate" asp-route-id="@Model.Presence.Id"><button type="submit">Valider</button></form>
+    <form method="post" asp-page-handler="Refuse" asp-route-id="@Model.Presence.Id"><button type="submit">Refuser</button></form>
+    <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Presence.Id" onsubmit="return confirm('Supprimer cette présence ?')">
+        <button type="submit">Supprimer</button>
+    </form>
+</div>
