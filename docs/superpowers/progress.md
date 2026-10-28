@@ -15,7 +15,7 @@ Mode d'exécution : par sous-agents (superpowers:subagent-driven-development). C
 | 2 | Comptes, mots de passe, journal, réglages | sonnet | fait | feature/02-comptes | PR #2 | handler Dapper DateTime ajouté ; motif Row pour enums/bools |
 | 3 | Membres | sonnet | fait | feature/03-membres | PR #3 | Create ne valide pas : appeler MemberInput.Validate avant |
 | 4 | Présences | sonnet | fait | feature/04-presences | PR #4 | règle du jour dans AllowsNewPresence ; corrections sans revérification (décision) |
-| 5 | Statistiques | sonnet | à faire | | | |
+| 5 | Statistiques | sonnet | fait | feature/05-stats | PR #5 | PerWeekday contient les 7 jours ; tri PerMember jours puis nom puis prénom |
 | 6 | Web : accès local, setup, connexion | opus | à faire | | | |
 | 7 | Borne : liaison, API, kiosque | opus | à faire | | | |
 | 8 | Écrans du responsable | sonnet | à faire | | | |
