@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Versioning;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -65,7 +68,7 @@ public sealed partial class UpdateService(HttpClient http, IConfiguration config
         var setupUri = CheckUrl(r.SetupUrl, repo, SetupName);
         var hashUri = CheckUrl(r.Sha256Url, repo, HashName);
 
-        var dir = Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(db.Path))!, "updates")).FullName;
+        var dir = CreateDownloadDir(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(db.Path))!, "updates"));
         var setupPath = Path.Combine(dir, SetupName);
 
         var expected = await http.GetStringAsync(hashUri, ct);
@@ -81,6 +84,66 @@ public sealed partial class UpdateService(HttpClient http, IConfiguration config
             throw new InvalidOperationException("Le fichier téléchargé est corrompu ou modifié.");
         Launch(setupPath);
     }
+
+    // Le service tourne en LocalSystem et un utilisateur standard peut créer des dossiers sous ProgramData :
+    // sans ces précautions, une jonction « updates » posée par lui redirigerait l'écriture ou le lancement.
+    // Le verrouillage de tout %ProgramData%\Pointage relève de l'installateur (tâche 13).
+    private static string CreateDownloadDir(string updates)
+    {
+        if (!Directory.Exists(updates)) CreatePrivateDir(updates);
+        RejectUntrusted(updates);
+        // Nettoyage au mieux des téléchargements précédents (dont un éventuel installateur déjà lancé).
+        foreach (var old in Directory.EnumerateFileSystemEntries(updates))
+        {
+            try
+            {
+                if (Directory.Exists(old)) Directory.Delete(old, recursive: true);
+                else File.Delete(old);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        }
+        // Dossier neuf, au nom imprévisible et réservé au service : personne d'autre ne peut y écrire ni le remplacer.
+        var dir = Path.Combine(updates, Guid.NewGuid().ToString("N"));
+        CreatePrivateDir(dir);
+        RejectUntrusted(dir);
+        return dir;
+    }
+
+    private static void CreatePrivateDir(string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Directory.CreateDirectory(path);
+            return;
+        }
+        // Héritage coupé : seuls SYSTEM, les administrateurs et le compte du service (SYSTEM en production) y ont accès.
+        var security = new DirectorySecurity();
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        foreach (var sid in TrustedSids())
+            security.AddAccessRule(new FileSystemAccessRule(sid, FileSystemRights.FullControl,
+                InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+        new DirectoryInfo(path).Create(security);
+    }
+
+    private static void RejectUntrusted(string path)
+    {
+        var info = new DirectoryInfo(path);
+        if (info.Attributes.HasFlag(FileAttributes.ReparsePoint))
+            throw new InvalidOperationException($"Dossier de mise à jour refusé (lien ou jonction) : {path}");
+        // Un dossier « updates » créé d'avance par un autre utilisateur lui appartient : il pourrait le renommer
+        // et le remplacer par une jonction entre la vérification et le lancement.
+        if (OperatingSystem.IsWindows() && info.GetAccessControl().GetOwner(typeof(SecurityIdentifier)) is SecurityIdentifier owner
+            && !TrustedSids().Contains(owner))
+            throw new InvalidOperationException($"Dossier de mise à jour refusé (propriétaire inattendu) : {path}");
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static SecurityIdentifier[] TrustedSids() =>
+    [
+        new(WellKnownSidType.LocalSystemSid, null),
+        new(WellKnownSidType.BuiltinAdministratorsSid, null),
+        WindowsIdentity.GetCurrent().User!,
+    ];
 
     public static bool IsNewer(string tag, Version current) =>
         TryParseVersion(tag, out var v) && v > Normalize(current);

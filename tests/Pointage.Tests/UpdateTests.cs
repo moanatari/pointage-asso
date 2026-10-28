@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pointage.Accounts;
+using Pointage.Data;
 using Pointage.Updates;
 
 namespace Pointage.Tests;
@@ -122,23 +124,45 @@ public class UpdateTests
     }
 
     [Fact]
-    public async Task Apply_HashMatches_LaunchesDownloadedFile()
+    public async Task Apply_HashMatches_LaunchesFromNewPrivateFolderEachTime()
     {
-        var setup = "officiel"u8.ToArray();
-        var service = Service(req => new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = req.RequestUri!.AbsolutePath.EndsWith(".sha256")
-                ? new StringContent(Convert.ToHexString(SHA256.HashData(setup)))
-                : new ByteArrayContent(setup),
-        });
-        string? launched = null;
-        service.Launch = path => launched = path;
+        var db = TestDb.Create(out _);
+        var service = Service(GoodRelease, db);
+        var launched = new List<string>();
+        service.Launch = launched.Add;
 
-        await service.ApplyAsync(new ReleaseInfo(new Version(9, 9, 9), Download + "Pointage-Setup.exe", Download + "Pointage-Setup.exe.sha256"), CancellationToken.None);
+        await service.ApplyAsync(Release, CancellationToken.None);
+        Assert.Equal(Setup, File.ReadAllBytes(launched[0]));
+        await service.ApplyAsync(Release, CancellationToken.None);
 
-        Assert.NotNull(launched);
-        Assert.Equal("updates", Path.GetFileName(Path.GetDirectoryName(launched)));
-        Assert.Equal(setup, File.ReadAllBytes(launched!));
+        var updates = Path.Combine(Path.GetDirectoryName(db.Path)!, "updates");
+        Assert.Equal(2, launched.Count);
+        Assert.NotEqual(Path.GetDirectoryName(launched[0]), Path.GetDirectoryName(launched[1]));
+        Assert.All(launched, l => Assert.Equal(updates, Path.GetDirectoryName(Path.GetDirectoryName(l))));
+        // Le dossier du premier téléchargement a été nettoyé.
+        Assert.Equal(Path.GetDirectoryName(launched[1]), Assert.Single(Directory.GetDirectories(updates)));
+        if (OperatingSystem.IsWindows())
+            Assert.True(new DirectoryInfo(Path.GetDirectoryName(launched[1])!).GetAccessControl().AreAccessRulesProtected);
+    }
+
+    [Fact]
+    public async Task Apply_UpdatesIsJunction_ThrowsWithoutLaunching()
+    {
+        var db = TestDb.Create(out _);
+        var updates = Path.Combine(Path.GetDirectoryName(db.Path)!, "updates");
+        var target = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "pointage-junction-" + Guid.NewGuid().ToString("N"))).FullName;
+        using (var mklink = Process.Start(new ProcessStartInfo("cmd", $"/c mklink /J \"{updates}\" \"{target}\"") { RedirectStandardOutput = true, UseShellExecute = false })!)
+            await mklink.WaitForExitAsync();
+        // Pas de jonction possible ici (hors Windows) : rien à vérifier. xUnit 2 n'a pas de saut dynamique.
+        if (!Directory.Exists(updates) || !new DirectoryInfo(updates).Attributes.HasFlag(FileAttributes.ReparsePoint)) return;
+
+        var service = Service(GoodRelease, db);
+        var launched = false;
+        service.Launch = _ => launched = true;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ApplyAsync(Release, CancellationToken.None));
+        Assert.False(launched);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(target));
     }
 
     [Fact]
@@ -153,10 +177,20 @@ public class UpdateTests
         Assert.Contains("Vérifier maintenant", html);
     }
 
-    private static UpdateService Service(Func<HttpRequestMessage, HttpResponseMessage> respond)
+    private static readonly byte[] Setup = "officiel"u8.ToArray();
+    private static readonly ReleaseInfo Release = new(new Version(9, 9, 9), Download + "Pointage-Setup.exe", Download + "Pointage-Setup.exe.sha256");
+
+    private static HttpResponseMessage GoodRelease(HttpRequestMessage req) => new(HttpStatusCode.OK)
+    {
+        Content = req.RequestUri!.AbsolutePath.EndsWith(".sha256")
+            ? new StringContent(Convert.ToHexString(SHA256.HashData(Setup)))
+            : new ByteArrayContent(Setup),
+    };
+
+    private static UpdateService Service(Func<HttpRequestMessage, HttpResponseMessage> respond, Db? db = null)
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["Pointage:GitHubRepo"] = Repo }).Build();
-        return new UpdateService(new HttpClient(new FakeHandler(respond)), config, TestDb.Create(out _), NullLogger<UpdateService>.Instance);
+        return new UpdateService(new HttpClient(new FakeHandler(respond)), config, db ?? TestDb.Create(out _), NullLogger<UpdateService>.Instance);
     }
 
     private static HttpResponseMessage Json(string json) =>
