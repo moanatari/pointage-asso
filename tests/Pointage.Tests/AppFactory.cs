@@ -19,6 +19,8 @@ public sealed partial class AppFactory(string? remoteIp = "127.0.0.1") : WebAppl
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("Pointage:DataDir", dataDir);
+        // Dépôt vide : le worker de mises à jour ne fait aucun appel réseau pendant les tests.
+        builder.UseSetting("Pointage:GitHubRepo", "");
         builder.ConfigureServices(s => s.AddSingleton<IStartupFilter>(new RemoteIpFilter(remoteIp)));
     }
 
