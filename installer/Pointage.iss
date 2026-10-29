@@ -75,14 +75,35 @@ Filename: "{sys}\sc.exe"; Parameters: "delete Pointage"; Flags: runhidden; RunOn
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Pointage"""; Flags: runhidden; RunOnceId: "DeleteFirewallRule"
 
 [Code]
-// ArreterService est écrite une seule fois (ArreterService.iss) et incluse deux fois : l'installateur et le
-// désinstalleur sont deux programmes distincts, et Inno Setup impose le préfixe « un. » aux fonctions du second.
-#define Prefixe ""
-#include "ArreterService.iss"
-#undef Prefixe
-#define Prefixe "un."
-#include "ArreterService.iss"
-#undef Prefixe
+// Demande l'arrêt du service Pointage et attend qu'il soit réellement arrêté (30 s au plus).
+// Sans cela, Pointage.exe est encore verrouillé et ne peut pas être remplacé pendant une mise à jour.
+// Renvoie True si le service est arrêté ou n'existe pas.
+// Le [Code] est commun à l'installateur et au désinstalleur : la même fonction sert aux deux.
+function ArreterService(): Boolean;
+var
+  Code, I: Integer;
+begin
+  // Si sc.exe ne peut même pas être lancé, le code de retour n'a aucun sens : on échoue franchement.
+  if not Exec(ExpandConstant('{sys}\sc.exe'), 'stop Pointage', '', SW_HIDE, ewWaitUntilTerminated, Code) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := True;
+  // 1060 = le service n'existe pas (première installation) ; 1062 = il n'est pas démarré : rien à attendre.
+  if (Code = 1060) or (Code = 1062) then Exit;
+  Result := False;
+  for I := 1 to 30 do
+  begin
+    // « find » renvoie 0 quand « sc query » affiche STOPPED.
+    if Exec(ExpandConstant('{cmd}'), '/C sc query Pointage | find "STOPPED" > nul', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0) then
+    begin
+      Result := True;
+      Exit;
+    end;
+    Sleep(1000);
+  end;
+end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
@@ -94,5 +115,5 @@ end;
 function InitializeUninstall(): Boolean;
 begin
   Result := True;
-  un.ArreterService();
+  ArreterService();
 end;
