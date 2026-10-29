@@ -1,0 +1,22 @@
+@page
+@model Pointage.Pages.Admin.JournalModel
+@{
+    ViewData["Title"] = "Journal";
+}
+<h1>Journal</h1>
+<p class="muted">Les 200 dernières entrées.</p>
+<table>
+    <thead><tr><th>Date</th><th>Compte</th><th>Action</th><th>Membre</th><th>Détails</th></tr></thead>
+    <tbody>
+    @foreach (var l in Model.Lines)
+    {
+        <tr>
+            <td>@l.At.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@l.Account</td>
+            <td>@l.Action</td>
+            <td>@l.Member</td>
+            <td>@l.Details</td>
+        </tr>
+    }
+    </tbody>
+</table>

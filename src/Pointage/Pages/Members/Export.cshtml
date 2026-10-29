@@ -1,0 +1,40 @@
+@page "{id:long}"
+@model Pointage.Pages.Members.ExportModel
+@using Pointage.Presences
+@{
+    var m = Model.Member;
+    ViewData["Title"] = "Données de " + m.FullName;
+}
+<p class="no-print"><button type="button" onclick="window.print()">Imprimer</button> <a href="/Members/Details/@m.Id">Retour à la fiche</a></p>
+<h1>Données personnelles : @m.FullName</h1>
+<table>
+    <tr><th>Code</th><td>@m.Code</td></tr>
+    <tr><th>Nom</th><td>@m.LastName</td></tr>
+    <tr><th>Prénom</th><td>@m.FirstName</td></tr>
+    <tr><th>Date de naissance</th><td>@m.BirthDate?.ToString("dd/MM/yyyy")</td></tr>
+    <tr><th>Téléphone</th><td>@m.Phone</td></tr>
+    <tr><th>E-mail</th><td>@m.Email</td></tr>
+    <tr><th>Commentaire</th><td>@m.Comment</td></tr>
+    <tr><th>Contact : nom</th><td>@m.Contact.LastName</td></tr>
+    <tr><th>Contact : prénom</th><td>@m.Contact.FirstName</td></tr>
+    <tr><th>Contact : date de naissance</th><td>@m.Contact.BirthDate?.ToString("dd/MM/yyyy")</td></tr>
+    <tr><th>Contact : téléphone</th><td>@m.Contact.Phone</td></tr>
+    <tr><th>Contact : e-mail</th><td>@m.Contact.Email</td></tr>
+    <tr><th>Fiche créée le</th><td>@m.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td></tr>
+</table>
+<h2>Présences (@Model.Presences.Count)</h2>
+<table>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Statut</th><th>Origine</th></tr></thead>
+    <tbody>
+    @foreach (var r in Model.Presences)
+    {
+        <tr>
+            <td>@r.Presence.Day.ToString("dd/MM/yyyy")</td>
+            <td>@r.Presence.ArrivedAt.ToString("HH:mm")</td>
+            <td>@(r.Presence.DepartedAt?.ToString("HH:mm") ?? "—")</td>
+            <td>@r.Presence.Status.Label()</td>
+            <td>@(r.Presence.Source == PresenceSource.Kiosk ? "borne" : "ajout manuel")</td>
+        </tr>
+    }
+    </tbody>
+</table>

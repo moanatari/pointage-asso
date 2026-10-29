@@ -1,0 +1,28 @@
+@page "{id:long?}"
+@model Pointage.Pages.Members.EditModel
+@{
+    ViewData["Title"] = Model.Id is null ? "Nouveau membre" : "Modifier le membre";
+}
+<h1>@ViewData["Title"]</h1>
+@foreach (var e in Model.Errors)
+{
+    <p class="error">@e</p>
+}
+<form method="post" class="stack">
+    <label>Nom <input name="LastName" value="@Model.LastName" required></label>
+    <label>Prénom <input name="FirstName" value="@Model.FirstName" required></label>
+    <label>Date de naissance <input type="date" name="BirthDate" value="@Model.BirthDate?.ToString("yyyy-MM-dd")" required></label>
+    <label>Téléphone <input name="Phone" value="@Model.Phone"></label>
+    <label>E-mail <input type="email" name="Email" value="@Model.Email"></label>
+    <label>Commentaire <textarea name="Comment" rows="3">@Model.Comment</textarea></label>
+    <p class="muted">Ne pas y noter de données sensibles (santé, situation familiale…).</p>
+    <fieldset>
+        <legend>Personne à contacter</legend>
+        <label>Nom <input name="ContactLastName" value="@Model.ContactLastName"></label>
+        <label>Prénom <input name="ContactFirstName" value="@Model.ContactFirstName"></label>
+        <label>Date de naissance <input type="date" name="ContactBirthDate" value="@Model.ContactBirthDate?.ToString("yyyy-MM-dd")"></label>
+        <label>Téléphone <input name="ContactPhone" value="@Model.ContactPhone"></label>
+        <label>E-mail <input type="email" name="ContactEmail" value="@Model.ContactEmail"></label>
+    </fieldset>
+    <button type="submit">Enregistrer</button>
+</form>

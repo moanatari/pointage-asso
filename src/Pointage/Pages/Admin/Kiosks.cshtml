@@ -1,0 +1,55 @@
+@page
+@model Pointage.Pages.Admin.KiosksModel
+@{
+    ViewData["Title"] = "Bornes";
+}
+<h1>Bornes</h1>
+@if (Model.Code is not null)
+{
+    <p>Saisissez ce code sur la borne (adresse <strong>/borne</strong>) :</p>
+    <p class="pairing-code">@Model.Code</p>
+    <p>Valable jusqu'à @Model.CodeExpiresAt.ToString("HH:mm"), une seule fois.</p>
+}
+<form method="post" asp-page-handler="Pair" class="stack">
+    @if (Model.Error is not null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <label>Nom de la borne <input asp-for="KioskName" placeholder="Ex. : Entrée" required></label>
+    <button type="submit">Lier une borne</button>
+</form>
+
+<h2>Bornes liées</h2>
+@if (Model.Kiosks.Count == 0)
+{
+    <p>Aucune borne liée.</p>
+}
+else
+{
+    <table>
+        <thead><tr><th>Nom</th><th>Liée le</th><th>État</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var k in Model.Kiosks)
+        {
+            <tr>
+                <td>@k.Name</td>
+                <td>@k.PairedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                @if (k.RevokedAt is { } revoked)
+                {
+                    <td>Révoquée le @revoked.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td></td>
+                }
+                else
+                {
+                    <td>Active</td>
+                    <td>
+                        <form method="post" asp-page-handler="Revoke" asp-route-id="@k.Id">
+                            <button type="submit">Révoquer</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,54 @@
+@page
+@model Pointage.Pages.Members.ImportModel
+@{
+    ViewData["Title"] = "Importer des membres";
+    var ok = Model.Rows?.Where(r => r.Errors.Count == 0 && !r.Duplicate).ToList() ?? [];
+    var failed = Model.Rows?.Where(r => r.Errors.Count > 0).ToList() ?? [];
+    var duplicates = Model.Rows?.Where(r => r.Errors.Count == 0 && r.Duplicate).ToList() ?? [];
+}
+<h1>Importer des membres</h1>
+<p><a href="/Members/Import?handler=Template">Télécharger le modèle</a> · <a href="/Members">Retour aux membres</a></p>
+@if (Model.Error is not null)
+{
+    <p class="error">@Model.Error</p>
+}
+@if (Model.Created is { } created)
+{
+    <p>@created membre(s) importé(s).</p>
+}
+@if (Model.Rows is not null)
+{
+    <h2>Aperçu</h2>
+    <p>@ok.Count ligne(s) prête(s) à importer, @failed.Count en erreur, @duplicates.Count doublon(s) ignoré(s).</p>
+    @if (failed.Count > 0)
+    {
+        <h3>Lignes en erreur (non importées)</h3>
+        <ul>
+        @foreach (var r in failed)
+        {
+            <li>Ligne @r.Line : @string.Join(" ", r.Errors)</li>
+        }
+        </ul>
+    }
+    @if (duplicates.Count > 0)
+    {
+        <h3>Doublons (déjà présents, ignorés)</h3>
+        <ul>
+        @foreach (var r in duplicates)
+        {
+            <li>Ligne @r.Line : @r.Input!.FirstName @r.Input.LastName</li>
+        }
+        </ul>
+    }
+    @if (ok.Count > 0)
+    {
+        <form method="post" asp-page-handler="Confirm">
+            <textarea hidden name="Csv">@Model.Csv</textarea>
+            <button type="submit">Confirmer l'import</button>
+        </form>
+    }
+}
+<form method="post" asp-page-handler="Preview" enctype="multipart/form-data" class="stack">
+    <label>Fichier CSV (séparateur « ; », 1 Mo maximum) <input type="file" name="Upload" accept=".csv,text/csv" required></label>
+    <button type="submit">Prévisualiser</button>
+</form>

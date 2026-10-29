@@ -1,1 +1,8 @@
 .superpowers/
+bin/
+obj/
+*.db
+*.sqlite
+*.bak
+publish/
+installer/Output/

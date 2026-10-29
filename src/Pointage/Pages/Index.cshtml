@@ -1,0 +1,45 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Accueil";
+}
+@* Rafraîchissement automatique : les arrivées pointées à la borne apparaissent sans action du responsable. *@
+@section Head {
+    <meta http-equiv="refresh" content="10;url=/?auto=1">
+}
+<h1>Accueil</h1>
+<p><a href="/Presences/Add">Ajouter une présence</a></p>
+<div class="columns">
+    <section>
+        <h2>À valider (@Model.Pending.Count)</h2>
+        @if (Model.Pending.Count > 0)
+        {
+            <form method="post" asp-page-handler="ValidateAll">
+                @foreach (var r in Model.Pending)
+                {
+                    <input type="hidden" name="ids" value="@r.Presence.Id" />
+                }
+                <button type="submit">Tout valider</button>
+            </form>
+        }
+        <ul class="plain">
+        @foreach (var r in Model.Pending)
+        {
+            <li>
+                <strong>@r.MemberName</strong>@(r.Age is { } age ? $", {age} ans" : "") – @r.Presence.ArrivedAt.ToString("HH:mm")
+                <form method="post" asp-page-handler="Validate" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Valider</button></form>
+                <form method="post" asp-page-handler="Refuse" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Refuser</button></form>
+            </li>
+        }
+        </ul>
+    </section>
+    <section>
+        <h2>Présents aujourd'hui (@Model.Present.Count)</h2>
+        <ul class="plain">
+        @foreach (var r in Model.Present)
+        {
+            <li><a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a> – @r.Presence.ArrivedAt.ToString("HH:mm")</li>
+        }
+        </ul>
+    </section>
+</div>

@@ -1,0 +1,46 @@
+@page
+@using Pointage.Accounts
+@model Pointage.Pages.Admin.AccountsModel
+@{
+    ViewData["Title"] = "Comptes";
+}
+<h1>Comptes</h1>
+@if (Model.Error is not null)
+{
+    <p class="error">@Model.Error</p>
+}
+<table>
+    <thead><tr><th>Identifiant</th><th>Rôle</th><th>État</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var a in Model.Accounts)
+    {
+        <tr>
+            <td>@a.Username</td>
+            <td>@a.Role.Label()</td>
+            <td>@(a.Active ? "Actif" : "Désactivé")</td>
+            <td>
+                <form method="post" asp-page-handler="Password" asp-route-id="@a.Id" class="inline">
+                    <input name="newPassword" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" required>
+                    <button type="submit">Réinitialiser le mot de passe</button>
+                </form>
+                <form method="post" asp-page-handler="Active" asp-route-id="@a.Id" asp-route-active="@(!a.Active)" class="inline">
+                    <button type="submit">@(a.Active ? "Désactiver" : "Réactiver")</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h2>Nouveau compte</h2>
+<form method="post" asp-page-handler="Create" class="stack">
+    <label>Identifiant <input asp-for="Username" autocomplete="off" required></label>
+    <label>Mot de passe (8 caractères minimum) <input asp-for="Password" type="password" autocomplete="new-password" required></label>
+    <label>Rôle
+        <select asp-for="NewRole">
+            <option value="Manager">Responsable</option>
+            <option value="SuperAdmin">Super admin</option>
+        </select>
+    </label>
+    <button type="submit">Créer le compte</button>
+</form>

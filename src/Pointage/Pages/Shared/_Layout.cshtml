@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] – Pointage</title>
+    <link rel="stylesheet" href="/static/site.css">
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav>
+            <a href="/">Accueil</a>
+            <a href="/Members">Membres</a>
+            <a href="/History">Historique</a>
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <a href="/Admin/Settings">Réglages</a>
+                <a href="/Admin/Kiosks">Bornes</a>
+            }
+            @* asp-page et non action : avec action explicite, le tag helper n'ajoute pas le jeton antiforgery (400). *@
+            <form method="post" asp-page="/Logout"><button type="submit">Déconnexion</button></form>
+        </nav>
+    }
+    <main>
+        @RenderBody()
+    </main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+@page "{id:long}"
+@model Pointage.Pages.Members.CardModel
+@{
+    ViewData["Title"] = "Carte de " + Model.Member.FullName;
+}
+@* Le menu et les boutons sont masqués à l'impression (site.css, media print). *@
+<p class="no-print"><button type="button" onclick="window.print()">Imprimer</button> <a href="/Members/Details/@Model.Member.Id">Retour à la fiche</a></p>
+<div class="card">
+    <p class="muted">@Model.Organization</p>
+    <p class="name">@Model.Member.FirstName</p>
+    <p class="name">@Model.Member.LastName</p>
+    <p class="code">@Model.Member.Code</p>
+</div>

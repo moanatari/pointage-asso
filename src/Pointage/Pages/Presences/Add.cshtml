@@ -1,0 +1,37 @@
+@page
+@model Pointage.Pages.Presences.AddModel
+@{
+    ViewData["Title"] = "Ajouter une présence";
+}
+<h1>Ajouter une présence</h1>
+@if (Model.Selected is { } m)
+{
+    <p>Membre : <strong>@m.FullName</strong> (<a href="/Presences/Add">changer</a>)</p>
+    @if (Model.Error is not null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <form method="post" class="stack">
+        <input type="hidden" name="MemberId" value="@m.Id">
+        <label>Date <input type="date" name="Day" value="@Model.Day?.ToString("yyyy-MM-dd")" required></label>
+        <label>Heure d'arrivée <input type="time" name="Time" value="@Model.Time?.ToString("HH:mm")" required></label>
+        <button type="submit">Ajouter</button>
+    </form>
+}
+else
+{
+    <form method="get" class="row-actions">
+        <input name="q" value="@Model.Q" placeholder="Nom, prénom ou code" autofocus>
+        <button type="submit">Rechercher</button>
+    </form>
+    <ul class="plain">
+    @foreach (var r in Model.Results)
+    {
+        <li><a href="/Presences/Add?memberId=@r.Id">@r.FullName</a> <span class="muted">(@r.Code)</span></li>
+    }
+    </ul>
+    @if (!string.IsNullOrWhiteSpace(Model.Q) && Model.Results.Count == 0)
+    {
+        <p>Aucun membre trouvé.</p>
+    }
+}

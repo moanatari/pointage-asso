@@ -1,0 +1,32 @@
+/* Mise en page sobre, lisible sur un poste de bureau, sans dépendance externe. */
+body { font-family: system-ui, sans-serif; margin: 0; color: #222; background: #fafafa; }
+nav { display: flex; gap: 1rem; align-items: center; padding: .75rem 1rem; background: #2f5d8a; }
+nav a { color: #fff; text-decoration: none; }
+nav form { margin-left: auto; }
+main { max-width: 60rem; margin: 0 auto; padding: 1rem; }
+.stack { display: flex; flex-direction: column; gap: .75rem; max-width: 28rem; }
+.stack label { display: flex; flex-direction: column; gap: .25rem; }
+.stack label:has(input[type=checkbox]) { flex-direction: row; align-items: center; }
+fieldset { display: flex; flex-direction: column; gap: .75rem; }
+.error { color: #b00020; }
+button { padding: .4rem .9rem; cursor: pointer; }
+.pairing-code { font-size: 3.5rem; font-weight: bold; letter-spacing: .3em; margin: .5rem 0; }
+table { border-collapse: collapse; }
+th, td { padding: .4rem .8rem; border-bottom: 1px solid #ddd; text-align: left; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+ul.plain { list-style: none; padding: 0; }
+ul.plain li { padding: .4rem 0; border-bottom: 1px solid #ddd; }
+form.inline { display: inline; margin-left: .4rem; }
+.row-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+.row-actions form { margin: 0; }
+.tiles { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.tile { background: #fff; border: 1px solid #ddd; border-radius: .4rem; padding: .6rem 1rem; min-width: 9rem; }
+.tile strong { display: block; font-size: 1.4rem; }
+.bar-row { display: flex; align-items: center; gap: .5rem; margin: .2rem 0; }
+.bar-row span:first-child { width: 2.5rem; }
+.bar { background: #2f5d8a; height: 1rem; }
+.card { border: 2px solid #222; padding: 2rem; text-align: center; max-width: 24rem; }
+.card .name { font-size: 2.2rem; font-weight: bold; }
+.card .code { font-size: 3rem; letter-spacing: .3em; font-weight: bold; }
+.muted { color: #666; }
+@media print { nav, .no-print { display: none; } body { background: #fff; } }
