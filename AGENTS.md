@@ -64,4 +64,8 @@ Les stores (`MemberStore`, `PresenceStore`…) sont des singletons injectés ; u
 - `main` = production, `dev` = intégration. Jamais de commit direct sur l'une ou l'autre.
 - Une tâche = une branche `feature/<NN>-<nom-court>` créée depuis `dev`, fusionnée par Pull Request vers `dev`.
 - Pour sortir une version : Pull Request `dev` → `main`, puis tag `vX.Y.Z` sur `main` (`git tag v1.2.3 && git push --tags`). La CI (`.github/workflows/build.yml`) lance les tests puis publie `Pointage-Setup.exe` et son `.sha256` dans une Release.
+- Jamais de fusion de `main` vers `dev` : `main` ne reçoit que des fusions de `dev`, donc `dev` contient déjà tout ce qui est en production.
+- Numéro de version : corrections seules → `Z` (`0.1.0` → `0.1.1`) ; nouvelle fonctionnalité → `Y` (`0.1.1` → `0.2.0`) ; `X` reste à 0 tant que l'application n'est pas jugée stable.
+- La version vient du tag : la CI la passe à `dotnet publish` et à l'installateur. Ne pas modifier `<Version>` dans `Pointage.csproj`.
+- Sur une Pull Request vers `main`, la CI compile aussi l'installateur : une erreur dans `installer/Pointage.iss` bloque la fusion au lieu de faire échouer la release au moment du tag.
 - Le suivi du développement initial est dans `docs/superpowers/progress.md`.
