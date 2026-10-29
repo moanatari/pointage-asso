@@ -177,4 +177,13 @@ public class StatsTests
         Assert.Contains("\"Dupont; Jr\";ABC234;2\r\n", csv);
         Assert.Contains("\"Le \"\"Grand\"\"\";DEF567;1\r\n", csv);
     }
+
+    [Fact]
+    public void Csv_FormulaLikeName_IsForcedToText()
+    {
+        var s = new PeriodStats(October, [], 1, 1, [new MemberCount(1, "=HYPERLINK(\"x\")", "ABC234", 2), new MemberCount(2, "-Lucas", "DEF567", 1)]);
+        var csv = StatsCsv.ForPeriod(s);
+        Assert.Contains("\"'=HYPERLINK(\"\"x\"\")\";ABC234;2\r\n", csv);
+        Assert.Contains("'-Lucas;DEF567;1\r\n", csv);
+    }
 }

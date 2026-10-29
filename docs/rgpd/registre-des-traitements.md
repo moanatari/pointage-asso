@@ -48,7 +48,7 @@ Un membre dont la dernière venue (ou, s'il n'est jamais venu, la date de créat
 - Accès par identifiant et mot de passe (8 caractères minimum, stockés sous forme d'empreinte), déconnexion automatique après inactivité, rôles « responsable » et « super admin ».
 - Borne liée par un code temporaire à usage unique, révocable ; la borne ne conserve aucune donnée.
 - Journal des actions des responsables (validations, corrections, exports, suppressions, purge, réglages).
-- Droit d'accès : export des données d'un membre ; droit à l'effacement : suppression ou anonymisation d'un membre.
+- Droit d'accès : export des données d'un membre ; droit à l'effacement : suppression ou anonymisation d'un membre. Les données effacées sont écrasées dans le fichier de la base, et la purge supprime aussi les copies de secours faites avant une mise à jour (`pointage-*.bak`).
 - Limites connues, à traiter par la structure : [aucune sauvegarde automatique ; base non chiffrée ; réseau local en HTTP]. Mesures complémentaires : [session Windows protégée, BitLocker, sauvegarde sur support externe rangé sous clé, etc.].
 
 **Information des personnes**

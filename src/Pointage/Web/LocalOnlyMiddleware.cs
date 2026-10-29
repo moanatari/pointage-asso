@@ -14,7 +14,9 @@ public sealed class LocalOnlyMiddleware(RequestDelegate next)
     {
         if (IsPublicPath(ctx.Request.Path)) return next(ctx);
 
-        if (!IsLoopback(ctx.Connection.RemoteIpAddress))
+        // Le Host est vérifié aussi : une page web piégée peut faire pointer son propre domaine sur 127.0.0.1
+        // (DNS rebinding), ses requêtes viennent alors bien de la boucle locale.
+        if (!IsLoopback(ctx.Connection.RemoteIpAddress) || !IsLocalHost(ctx.Request.Host.Host))
         {
             ctx.Response.StatusCode = StatusCodes.Status404NotFound;
             return Task.CompletedTask;
@@ -33,4 +35,7 @@ public sealed class LocalOnlyMiddleware(RequestDelegate next)
     // IP inconnue = refus : on ne laisse jamais passer faute d'information.
     private static bool IsLoopback(IPAddress? ip) =>
         ip is not null && IPAddress.IsLoopback(ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip);
+
+    private static bool IsLocalHost(string host) =>
+        host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host is "127.0.0.1" or "[::1]";
 }

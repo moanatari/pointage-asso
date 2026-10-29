@@ -16,6 +16,7 @@ public static class AuditActions
     public const string MemberAnonymize = nameof(MemberAnonymize);
     public const string MemberExport = nameof(MemberExport);
     public const string MemberImport = nameof(MemberImport);
+    public const string HistoryExport = nameof(HistoryExport);
     public const string Purge = nameof(Purge);
     public const string Settings = nameof(Settings);
     public const string AccountCreate = nameof(AccountCreate);
@@ -39,6 +40,7 @@ public static class AuditActions
         MemberAnonymize => "Anonymisation",
         MemberExport => "Export des données",
         MemberImport => "Import CSV",
+        HistoryExport => "Export de l'historique",
         Purge => "Purge RGPD",
         Settings => "Réglages",
         AccountCreate => "Création de compte",

@@ -64,11 +64,14 @@ Les 14 tâches sont terminées et fusionnées dans `dev` (PR #1 à #14). La rele
 ### Améliorations différées (jugées « peut attendre » par la relecture finale)
 - Tri des noms accentués (Élodie après Z), à corriger en premier : c'est visible.
 - Refuser les dates futures dans « Ajouter une présence ».
-- Neutraliser les formules Excel dans l'export CSV (préfixer `'` devant `=+-@`).
 - Renouveler le cookie de la borne à chaque visite (Chrome plafonne à 400 jours).
 - `ValidateMany` : se limiter au jour courant.
-- Installateur : forcer le propriétaire de `C:\ProgramData\Pointage` (`icacls /setowner`).
 - Le port 5080 est écrit à trois endroits et `appsettings.json` est écrasé à chaque mise à jour.
 - Fiche membre : statistiques sur une période au choix.
 - Afficher sur la page Réglages le nombre de membres à purger.
 - Renormaliser les fins de ligne (`git add --renormalize .`) dans un commit séparé.
+
+### Revue complète du 2026-10-29 (feature/19-corrections-revue)
+- Corrigé : `Host` vérifié sur les pages locales (DNS rebinding), formules neutralisées dans le CSV, `secure_delete` et suppression des `.bak` à la purge, durée de conservation bornée à 120 mois dans l'assistant, export de l'historique journalisé, propriétaire du dossier de données forcé, pare-feu limité au sous-réseau local.
+- Laissé en l'état : formulaires sans `asp-page` (fonctionnent, jeton présent), pas de limite d'essais sur `/Login` (page locale uniquement), deux présences non refusées possibles en repassant un refus en validé (stats justes en jours distincts).
+- Piste : signer le `.sha256` des mises à jour (ECDsa, clé dans un secret de la CI) pour protéger d'une compromission du compte GitHub.

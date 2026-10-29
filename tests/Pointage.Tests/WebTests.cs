@@ -62,6 +62,34 @@ public class WebTests
             Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(path)).StatusCode);
     }
 
+    [Theory]
+    [InlineData("piege.example")]
+    [InlineData("127.0.0.1.nip.io")]
+    public async Task LoopbackIp_ForeignHost_Returns404(string host)
+    {
+        // DNS rebinding : la requête vient bien de 127.0.0.1 mais au nom d'un autre site.
+        using var app = new AppFactory();
+        var client = app.CreateClient();
+        foreach (var path in new[] { "/", "/Login", "/Setup" })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            request.Headers.Host = host;
+            Assert.Equal(HttpStatusCode.NotFound, (await client.SendAsync(request)).StatusCode);
+        }
+    }
+
+    [Theory]
+    [InlineData("127.0.0.1:5080")]
+    [InlineData("[::1]:5080")]
+    [InlineData("LOCALHOST")]
+    public async Task LoopbackIp_LocalHostNames_AreAccepted(string host)
+    {
+        using var app = new AppFactory();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/Setup");
+        request.Headers.Host = host;
+        Assert.Equal(HttpStatusCode.OK, (await app.CreateClient().SendAsync(request)).StatusCode);
+    }
+
     [Fact]
     public async Task RemoteIp_StaticCss_IsServed()
     {
