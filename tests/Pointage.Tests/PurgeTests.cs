@@ -90,6 +90,8 @@ public class PurgeTests
         audit.Write(admin, AuditActions.Validate); // récente : doit rester
         using (var c = app.Services.GetRequiredService<Db>().Open())
             c.Execute("UPDATE audit SET at='2000-01-01 09:00:00' WHERE action=@a", new { a = AuditActions.Login });
+        var backup = Path.Combine(Path.GetDirectoryName(app.Services.GetRequiredService<Db>().Path)!, "pointage-20200101-090000.bak");
+        File.WriteAllText(backup, "ancienne copie");
 
         Assert.Contains("Anonymiser ces 1 membres", WebUtility.HtmlDecode(await client.GetStringAsync("/Admin/Purge")));
         (await AppFactory.PostFormAsync(client, "/Admin/Purge", "/Admin/Purge", [])).EnsureSuccessStatusCode();
@@ -103,6 +105,7 @@ public class PurgeTests
         var actions = audit.Recent(50).Select(e => e.Action).ToList();
         Assert.DoesNotContain(AuditActions.Login, actions);
         Assert.Contains(AuditActions.Validate, actions);
+        Assert.False(File.Exists(backup));
     }
 
     [Fact]

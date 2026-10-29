@@ -8,7 +8,7 @@ using Pointage.Web;
 
 namespace Pointage.Pages.Admin;
 
-public class PurgeModel(MemberStore members, SettingsStore settings, AuditLog audit, TimeProvider time) : PageModel
+public class PurgeModel(MemberStore members, SettingsStore settings, AuditLog audit, TimeProvider time, Db db) : PageModel
 {
     public int RetentionMonths { get; private set; }
     public IReadOnlyList<(Member Member, DateOnly? LastVisit)> Candidates { get; private set; } = [];
@@ -24,7 +24,8 @@ public class PurgeModel(MemberStore members, SettingsStore settings, AuditLog au
         foreach (var m in toPurge) members.Anonymize(m.Id);
         // Le journal suit la même durée de conservation que les membres.
         audit.DeleteOlderThan(time.Now().AddMonths(-retention));
-        audit.Write(User.AccountId(), AuditActions.Purge, details: $"{toPurge.Count} membre(s) anonymisé(s)");
+        var backups = db.DeleteBackups();
+        audit.Write(User.AccountId(), AuditActions.Purge, details: $"{toPurge.Count} membre(s) anonymisé(s), {backups} copie(s) .bak supprimée(s)");
         Purged = toPurge.Count;
         Load();
         return Page();

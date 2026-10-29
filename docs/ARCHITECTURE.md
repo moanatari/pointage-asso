@@ -79,7 +79,7 @@ Si le cookie est perdu, il suffit de relier la borne (voir `docs/borne.md`).
 
 `Data/Db.cs` contient le tableau `Migrations` ; chaque entrée est un bloc SQL. La version appliquée est dans `PRAGMA user_version`. Au démarrage, `Migrate()` :
 
-1. si la base existe et n'est pas vide, la copie en `pointage-AAAAMMJJ-HHMMSS.bak` dans le même dossier (filet de sécurité minimal, **pas une sauvegarde**) ;
+1. si la base existe et n'est pas vide, la copie en `pointage-AAAAMMJJ-HHMMSS.bak` dans le même dossier (filet de sécurité minimal, **pas une sauvegarde** ; la purge RGPD supprime ces copies, qui contiennent les membres tels qu'ils étaient) ;
 2. applique chaque migration manquante dans une transaction, puis met à jour `user_version`.
 
 Pour changer le schéma : ajouter une entrée **à la fin** du tableau et incrémenter `SchemaVersion`. Ne jamais modifier une migration déjà publiée, des bases existantes l'ont déjà appliquée. Ajouter un test dans `tests/Pointage.Tests/DbTests.cs`.

@@ -46,8 +46,17 @@ public sealed class Db(string path)
         var c = new SqliteConnection($"Data Source={Path}");
         c.Open();
         // foreign_keys est propre à chaque connexion ; busy_timeout évite les « database is locked » entre requêtes concurrentes.
-        c.Execute("PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000");
+        // secure_delete écrase les données effacées : sinon un membre anonymisé reste lisible dans les pages libres du fichier.
+        c.Execute("PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA secure_delete=ON");
         return c;
+    }
+
+    // Les copies d'avant migration gardent les membres tels qu'ils étaient : la purge RGPD les supprime aussi.
+    public int DeleteBackups()
+    {
+        var files = Directory.GetFiles(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(Path))!, "pointage-*.bak");
+        foreach (var f in files) File.Delete(f);
+        return files.Length;
     }
 
     public void Migrate()

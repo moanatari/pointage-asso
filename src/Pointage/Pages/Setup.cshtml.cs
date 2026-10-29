@@ -26,7 +26,8 @@ public class SetupModel(AccountStore accounts, SettingsStore settings) : PageMod
         if (accounts.AnySuperAdmin()) return NotFound();
         if (string.IsNullOrWhiteSpace(OrganizationName)) Errors.Add("Le nom de la structure est obligatoire.");
         if (Password != Confirm) Errors.Add("Les deux mots de passe ne correspondent pas.");
-        if (RetentionMonths < 1) Errors.Add("La durée de conservation doit être d'au moins 1 mois.");
+        // Même borne que les Réglages : au-delà, le calcul de la date limite de purge déborde.
+        if (RetentionMonths is < 1 or > 120) Errors.Add("La durée de conservation doit être comprise entre 1 et 120 mois.");
         if (Errors.Count > 0) return Page();
 
         long id;

@@ -1,5 +1,7 @@
 # Tests à chaque push et Pull Request vers dev ou main.
 # Publication d'une version (installateur + empreinte SHA-256) quand on pousse un tag vX.Y.Z sur main.
+# Les PR vers main compilent aussi l'installateur (sans rien publier) : une erreur dans le .iss
+# bloque la fusion au lieu de faire échouer la release au moment du tag.
 name: build
 
 on:
@@ -13,15 +15,15 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - run: dotnet test
 
   release:
-    # Seulement pour un tag « v* », et seulement si les tests passent.
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Pour un tag « v* » ou une PR vers main, et seulement si les tests passent.
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'pull_request' && github.base_ref == 'main')
     needs: test
     runs-on: windows-latest
     # Nécessaire pour que « gh release create » puisse créer la release avec le GITHUB_TOKEN.
@@ -31,13 +33,15 @@ jobs:
       TAG: ${{ github.ref_name }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
       - name: Version à partir du tag
         run: |
+          # PR vers main : pas de tag, une version factice suffit pour compiler l'installateur.
+          if ($env:GITHUB_EVENT_NAME -eq 'pull_request') { "VERSION=0.0.0" >> $env:GITHUB_ENV; exit 0 }
           if ($env:TAG -notmatch '^v\d+\.\d+\.\d+$') { throw "Tag inattendu : $env:TAG (format vX.Y.Z)" }
           "VERSION=$($env:TAG.Substring(1))" >> $env:GITHUB_ENV
 
@@ -53,10 +57,12 @@ jobs:
           Copy-Item installer/Output/Pointage-Setup.exe .
 
       - name: Empreinte SHA-256
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           # Texte ASCII brut, sans BOM (le « > » de Windows PowerShell écrirait de l'UTF-16 et casserait la vérification).
           $hash = (Get-FileHash Pointage-Setup.exe -Algorithm SHA256).Hash.ToLower()
           [IO.File]::WriteAllText("$PWD\Pointage-Setup.exe.sha256", "$hash  Pointage-Setup.exe`n", [Text.Encoding]::ASCII)
 
       - name: Création de la release
+        if: startsWith(github.ref, 'refs/tags/v')
         run: gh release create $env:TAG Pointage-Setup.exe Pointage-Setup.exe.sha256 --generate-notes

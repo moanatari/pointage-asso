@@ -48,6 +48,9 @@ Name: "{commonappdata}\Pointage"; Flags: uninsneveruninstall
 ; ni remplacer le dossier des mises à jour par un lien (attaque par « jonction »). On utilise les identifiants SID
 ; (S-1-5-18 = SYSTEM, S-1-5-32-544 = Administrateurs) pour que cela marche aussi sur un Windows en français.
 Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\Pointage"" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F"; Flags: runhidden; StatusMsg: "Protection du dossier de données..."
+; Le propriétaire garde toujours le droit de modifier les autorisations : si un autre compte a créé le dossier avant
+; l'installation, il pourrait se rendre l'accès. On le remet aux Administrateurs.
+Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\Pointage"" /setowner *S-1-5-32-544 /T /C"; Flags: runhidden
 
 ; Les commandes sc.exe et netsh.exe ci-dessous peuvent échouer sans gravité (service ou règle déjà présents lors d'une
 ; mise à jour) : Inno Setup ne s'arrête pas sur un code de retour non nul d'une ligne [Run].
@@ -58,10 +61,10 @@ Filename: "{sys}\sc.exe"; Parameters: "config Pointage binPath= ""\""{app}\Point
 Filename: "{sys}\sc.exe"; Parameters: "failure Pointage reset= 86400 actions= restart/60000"; Flags: runhidden
 
 ; Règle de pare-feu : la borne (une tablette ou un autre PC) doit joindre le port 5080 sur le réseau local.
-; Pas de profil « public » (Wi-Fi inconnu) pour ne rien exposer par erreur. On supprime d'abord l'ancienne règle
+; Pas de profil « public » (Wi-Fi inconnu) et seulement le sous-réseau local, pour ne rien exposer par erreur. On supprime d'abord l'ancienne règle
 ; pour ne jamais en cumuler plusieurs.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Pointage"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Pointage"" dir=in action=allow protocol=TCP localport=5080 profile=private,domain"; Flags: runhidden; StatusMsg: "Ouverture du port 5080..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Pointage"" dir=in action=allow protocol=TCP localport=5080 profile=private,domain remoteip=localsubnet"; Flags: runhidden; StatusMsg: "Ouverture du port 5080..."
 
 Filename: "{sys}\sc.exe"; Parameters: "start Pointage"; Flags: runhidden; StatusMsg: "Démarrage du service Pointage..."
 ; Proposé seulement en installation normale (pas en mise à jour silencieuse).

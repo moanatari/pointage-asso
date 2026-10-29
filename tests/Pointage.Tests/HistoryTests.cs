@@ -58,6 +58,7 @@ public class HistoryTests
         Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
         Assert.StartsWith("Nom;Code;Jours de présence", Encoding.UTF8.GetString(bytes)[1..]);
         Assert.Equal($"presences-{week.From:yyyy-MM-dd}-{week.To:yyyy-MM-dd}.csv", response.Content.Headers.ContentDisposition?.FileName);
+        Assert.Contains(app.Services.GetRequiredService<Pointage.Audit.AuditLog>().Recent(10), e => e.Action == Pointage.Audit.AuditActions.HistoryExport);
     }
 
     [Fact]
