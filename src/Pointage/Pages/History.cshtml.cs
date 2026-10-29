@@ -1,14 +1,16 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Pointage.Audit;
 using Pointage.Data;
 using Pointage.Members;
 using Pointage.Presences;
 using Pointage.Stats;
+using Pointage.Web;
 
 namespace Pointage.Pages;
 
-public class HistoryModel(StatsService stats, PresenceStore presences, MemberStore members, TimeProvider time) : PageModel
+public class HistoryModel(StatsService stats, PresenceStore presences, MemberStore members, TimeProvider time, AuditLog audit) : PageModel
 {
     private static readonly string[] Presets = ["yesterday", "thisweek", "lastweek", "thismonth", "lastmonth", "custom"];
 
@@ -37,6 +39,8 @@ public class HistoryModel(StatsService stats, PresenceStore presences, MemberSto
     public IActionResult OnGetCsv()
     {
         Resolve();
+        // Le fichier contient les noms de tous les membres venus sur la période : sa sortie est tracée.
+        audit.Write(User.AccountId(), AuditActions.HistoryExport, details: $"{Current.From:yyyy-MM-dd} → {Current.To:yyyy-MM-dd}");
         var bytes = Encoding.UTF8.GetBytes(StatsCsv.ForPeriod(stats.ForPeriod(Current)));
         return File(bytes, "text/csv; charset=utf-8", $"presences-{Current.From:yyyy-MM-dd}-{Current.To:yyyy-MM-dd}.csv");
     }

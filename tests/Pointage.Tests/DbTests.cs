@@ -45,6 +45,14 @@ public class DbTests
     }
 
     [Fact]
+    public void Open_EnablesSecureDelete()
+    {
+        var db = NewDb();
+        using var c = db.Open();
+        Assert.Equal(1, c.ExecuteScalar<int>("PRAGMA secure_delete"));
+    }
+
+    [Fact]
     public void Migrate_FreshDb_WritesNoBackup()
     {
         var db = NewDb();
