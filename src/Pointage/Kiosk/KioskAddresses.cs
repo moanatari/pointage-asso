@@ -11,14 +11,22 @@ public static class KioskAddresses
     {
         var suffix = port is { } p ? $":{p}" : "";
         var urls = new List<string> { $"http://{Environment.MachineName}{suffix}/borne" };
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+        try
         {
-            if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-            foreach (var u in nic.GetIPProperties().UnicastAddresses)
-                if (u.Address.AddressFamily == AddressFamily.InterNetwork && IsPrivate(u.Address))
-                    urls.Add($"http://{u.Address}{suffix}/borne");
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                foreach (var u in nic.GetIPProperties().UnicastAddresses)
+                    if (u.Address.AddressFamily == AddressFamily.InterNetwork && IsPrivate(u.Address))
+                        urls.Add($"http://{u.Address}{suffix}/borne");
+            }
         }
-        return urls;
+        catch (NetworkInformationException)
+        {
+            // Une carte réseau défaillante ne doit pas faire échouer la page : on garde l'adresse par nom.
+        }
+        // Distinct : une carte peut exposer la même adresse plusieurs fois.
+        return urls.Distinct().ToList();
     }
 
     public static bool IsPrivate(IPAddress ip)

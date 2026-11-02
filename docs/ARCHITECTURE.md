@@ -22,7 +22,7 @@ Un seul programme, `Pointage.exe` (ASP.NET Core Razor Pages, .NET 10), installé
 ```
 
 - Les pages du responsable (connexion et assistant compris) ne répondent qu'à une requête venant de la machine elle-même : `Web/LocalOnlyMiddleware.cs` renvoie 404 aux autres. Les seules exceptions sont les préfixes `/borne`, `/api/borne` et `/static`.
-- Le programme écoute sur `0.0.0.0:{port}`, le port étant enregistré en base (réglage `port`, 5080 par défaut ; changement dans Réglages ou par `Pointage.exe set-port`). Au démarrage, la règle de pare-feu est resynchronisée. Restent en 5080 : la règle initiale et le lien d'ouverture de `installer/Pointage.iss` et l'adresse affichée par `Pages/Setup.cshtml.cs`.
+- Le programme écoute sur `0.0.0.0:{port}`, le port étant enregistré en base (réglage `port`, 5080 par défaut ; changement dans Réglages ou par `Pointage.exe set-port`). Au démarrage, la règle de pare-feu est resynchronisée. Restent en 5080 : la règle initiale et le lien d'ouverture de `installer/Pointage.iss`.
 - La base est `pointage.db` dans `C:\ProgramData\Pointage` (ou dans `Pointage:DataDir` si renseigné). L'installateur verrouille ce dossier à SYSTEM et aux administrateurs.
 
 ## Rôle de chaque dossier de `src/Pointage`
