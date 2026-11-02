@@ -13,7 +13,7 @@ La borne est un PC (ou une tablette Windows) qui affiche en plein écran la page
 
 Sur le PC de la borne, **dans la session Windows qui servira de borne** (une session sans mot de passe ou avec ouverture automatique, pour qu'elle démarre toute seule) :
 
-1. Copier le fichier `scripts/borne-kiosque.ps1` du dépôt sur le PC (clé USB, par exemple).
+1. Copier le fichier `borne-kiosque.ps1` (téléchargeable depuis l'application : `/static/borne-kiosque.ps1`) sur le PC (clé USB, par exemple).
 2. Ouvrir PowerShell (pas besoin d'être administrateur) et lancer, en remplaçant l'adresse :
 
    ```

@@ -272,4 +272,39 @@ public class KioskTests
         Assert.False(response.IsSuccessStatusCode);
         Assert.DoesNotContain(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.KioskPair);
     }
+
+    [Theory]
+    [InlineData("192.168.1.20", true)]
+    [InlineData("172.20.0.1", true)]
+    [InlineData("172.32.0.1", false)]
+    [InlineData("8.8.8.8", false)]
+    [InlineData("10.0.0.1", true)]
+    public void IsPrivate_Ranges(string ip, bool expected) =>
+        Assert.Equal(expected, KioskAddresses.IsPrivate(IPAddress.Parse(ip)));
+
+    [Fact]
+    public void Urls_FirstIsMachineName()
+    {
+        Assert.Equal($"http://{Environment.MachineName}:5080/borne", KioskAddresses.Urls(5080)[0]);
+        Assert.Equal($"http://{Environment.MachineName}/borne", KioskAddresses.Urls(null)[0]);
+    }
+
+    [Fact]
+    public async Task KiosksPage_ShowsBorneUrl()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+        var html = await client.GetStringAsync("/Admin/Kiosks");
+        Assert.Contains("Adresse à saisir sur la borne", html);
+        Assert.Contains($"{Environment.MachineName}/borne", html);
+    }
+
+    [Fact]
+    public async Task KioskScript_DownloadableFromLan()
+    {
+        using var app = new AppFactory(LanIp);
+        var response = await app.CreateClient().GetAsync("/static/borne-kiosque.ps1");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/octet-stream", response.Content.Headers.ContentType?.MediaType);
+    }
 }
