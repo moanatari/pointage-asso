@@ -1,4 +1,5 @@
 @page
+@using Pointage.Presences
 @model IndexModel
 @{
     ViewData["Title"] = "Accueil";
@@ -33,12 +34,38 @@
         }
         </ul>
     </section>
+    @if (Model.DepartureValidation || Model.PendingDepartures.Count > 0)
+    {
+        <section>
+            <h2>Départs à valider (@Model.PendingDepartures.Count)</h2>
+            <ul class="plain">
+            @foreach (var r in Model.PendingDepartures)
+            {
+                var left = r.Presence.DepartedAt!.Value;
+                <li>
+                    <strong>@r.MemberName</strong> – parti @(DateOnly.FromDateTime(left) == Model.Today ? "" : left.ToString("dd/MM") + " ")@left.ToString("HH:mm")
+                    <form method="post" asp-page-handler="ValidateDeparture" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Valider</button></form>
+                    <form method="post" asp-page-handler="RefuseDeparture" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Refuser</button></form>
+                </li>
+            }
+            </ul>
+        </section>
+    }
     <section>
         <h2>Présents aujourd'hui (@Model.Present.Count)</h2>
         <ul class="plain">
         @foreach (var r in Model.Present)
         {
-            <li><a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a> – @r.Presence.ArrivedAt.ToString("HH:mm")</li>
+            <li><a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a> – arrivé @r.Presence.ArrivedAt.ToString("HH:mm")@(r.Presence.Status == PresenceStatus.Pending ? " (à valider)" : "")@(r.Presence.DepartureStatus == PresenceStatus.Pending ? " (départ à valider)" : "")</li>
+        }
+        </ul>
+    </section>
+    <section>
+        <h2>Partis aujourd'hui (@Model.Departed.Count)</h2>
+        <ul class="plain">
+        @foreach (var r in Model.Departed)
+        {
+            <li><a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a> – arrivé @r.Presence.ArrivedAt.ToString("HH:mm") – @(r.Presence.DepartedAt is { } d ? $"parti {d:HH:mm}" : "départ non pointé")@(r.Presence.Status == PresenceStatus.Pending ? " (à valider)" : "")</li>
         }
         </ul>
     </section>

@@ -102,7 +102,7 @@ public class PresenceTests
         _store.Decide(id, PresenceStatus.Refused, _admin);
         _time.Advance(TimeSpan.FromMinutes(5));
         _store.Decide(id, PresenceStatus.Validated, other);
-        var row = Assert.Single(_store.ValidatedToday());
+        var row = Assert.Single(_store.Today().Present);
         Assert.Equal(PresenceStatus.Validated, row.Presence.Status);
         Assert.Equal(other, row.Presence.DecidedBy);
         Assert.Equal("paul", row.DecidedByName);

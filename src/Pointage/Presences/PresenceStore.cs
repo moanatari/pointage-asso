@@ -212,8 +212,6 @@ public sealed class PresenceStore(Db db, TimeProvider time)
 
     public IReadOnlyList<PresenceRow> PendingToday() => Query("p.day=@today AND p.status='Pending'", new { today = time.Today() });
 
-    public IReadOnlyList<PresenceRow> ValidatedToday() => Query("p.day=@today AND p.status='Validated'", new { today = time.Today() });
-
     public IReadOnlyList<PresenceRow> ForMember(long memberId, int limit) => Query("p.member_id=@memberId", new { memberId }, limit);
 
     public IReadOnlyList<PresenceRow> ForPeriod(DateOnly from, DateOnly to) => Query("p.day BETWEEN @from AND @to", new { from, to });

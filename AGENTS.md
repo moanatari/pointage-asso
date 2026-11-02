@@ -25,7 +25,7 @@ Un projet applicatif `src/Pointage`, un projet de tests `tests/Pointage.Tests`. 
 | `Data/` | `Db` (connexion, migrations, handlers Dapper), `Clock` (heure locale) |
 | `Accounts/` | comptes responsables, hachage des mots de passe |
 | `Members/` | membres, codes, recherche sans accents, import CSV (isolé dans `MemberCsvImport.cs`) |
-| `Presences/` | pointages et leurs statuts ; la règle « une présence par jour » |
+| `Presences/` | passages, départs et leurs statuts |
 | `Stats/` | périodes et statistiques (présences validées, jours distincts), export CSV |
 | `Kiosk/` | API de la borne et liaison par code temporaire |
 | `Web/` | `LocalOnlyMiddleware`, `reset-admin`, aides sur l'utilisateur connecté |

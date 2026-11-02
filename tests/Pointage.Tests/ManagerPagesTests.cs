@@ -51,9 +51,91 @@ public class ManagerPagesTests
         (await AppFactory.PostFormAsync(client, "/", $"/?handler=Refuse&id={id}", [])).EnsureSuccessStatusCode();
 
         Assert.Equal(PresenceStatus.Refused, presences.Get(id)!.Status);
-        Assert.Empty(presences.ValidatedToday());
+        Assert.Empty(presences.Today().Present);
+        Assert.Empty(presences.Today().Departed);
         var entry = Assert.Single(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.Refuse);
         Assert.Equal(lucas.Id, entry.MemberId);
+    }
+
+    private static string Section(string html, string title)
+    {
+        var start = html.IndexOf(title, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Section absente : {title}");
+        var end = html.IndexOf("</section>", start, StringComparison.Ordinal);
+        return html[start..end];
+    }
+
+    [Fact]
+    public async Task Home_DepartedMember_ListedUnderPartisNotPresents()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var lucas = CreateLucas(app);
+        var presences = app.Services.GetRequiredService<PresenceStore>();
+        presences.CheckIn(lucas.Id);
+        presences.Decide(presences.PendingToday().Single().Presence.Id, PresenceStatus.Validated, 1);
+        presences.Depart(lucas.Id, false);
+        var left = presences.Today().Departed.Single().Presence.DepartedAt!.Value;
+
+        var html = await Text(await client.GetAsync("/"));
+
+        Assert.Contains("Présents aujourd'hui (0)", html);
+        var partis = Section(html, "Partis aujourd'hui (1)");
+        Assert.Contains("Lucas Dupont", partis);
+        Assert.Contains($"parti {left:HH:mm}", partis);
+    }
+
+    [Fact]
+    public async Task Home_PendingArrival_ShownInPresentsWithMarker()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        app.Services.GetRequiredService<PresenceStore>().CheckIn(CreateLucas(app).Id);
+
+        var html = await Text(await client.GetAsync("/"));
+
+        Assert.Contains("(à valider)", Section(html, "Présents aujourd'hui (1)"));
+    }
+
+    private static (long Id, long MemberId) PendingDeparture(AppFactory app)
+    {
+        var presences = app.Services.GetRequiredService<PresenceStore>();
+        var lucas = CreateLucas(app);
+        presences.CheckIn(lucas.Id);
+        presences.Depart(lucas.Id, true);
+        return (presences.PendingDepartures().Single().Presence.Id, lucas.Id);
+    }
+
+    [Fact]
+    public async Task Home_RefuseDeparture_MemberBackInPresents_AndAudited()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var (id, memberId) = PendingDeparture(app);
+        Assert.Contains("Départs à valider (1)", await Text(await client.GetAsync("/")));
+
+        (await AppFactory.PostFormAsync(client, "/", $"/?handler=RefuseDeparture&id={id}", [])).EnsureSuccessStatusCode();
+
+        var presences = app.Services.GetRequiredService<PresenceStore>();
+        Assert.Empty(presences.PendingDepartures());
+        Assert.Contains("Présents aujourd'hui (1)", await Text(await client.GetAsync("/")));
+        var entry = Assert.Single(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.DepartureRefuse);
+        Assert.Equal(memberId, entry.MemberId);
+    }
+
+    [Fact]
+    public async Task Home_ValidateDeparture_Audited()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var (id, memberId) = PendingDeparture(app);
+
+        (await AppFactory.PostFormAsync(client, "/", $"/?handler=ValidateDeparture&id={id}", [])).EnsureSuccessStatusCode();
+
+        Assert.Empty(app.Services.GetRequiredService<PresenceStore>().PendingDepartures());
+        Assert.Contains("Partis aujourd'hui (1)", await Text(await client.GetAsync("/")));
+        var entry = Assert.Single(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.DepartureValidate);
+        Assert.Equal(memberId, entry.MemberId);
     }
 
     [Fact]

@@ -33,7 +33,7 @@ Un seul programme, `Pointage.exe` (ASP.NET Core Razor Pages, .NET 10), installé
 | `Data/` | `Db` : ouverture de connexion, migrations, handlers Dapper pour les dates. `Clock` : `Now()` / `Today()` en heure locale, tronquées à la seconde |
 | `Accounts/` | `AccountStore` (comptes, rôles `SuperAdmin` / `Manager`, garde-fou « dernier super admin »), `Passwords` (PBKDF2) |
 | `Members/` | `MemberStore`, `MemberCode` (code à 6 caractères), `SearchText` (recherche sans accents ni casse), `MemberCsvImport` (import, volontairement isolé car appelé à évoluer) |
-| `Presences/` | `PresenceStore` : pointage, validation, corrections, règle « une présence par jour » |
+| `Presences/` | `PresenceStore` : passages, départs et leurs statuts, validation, corrections |
 | `Stats/` | `Periods` (hier, semaine, mois, année scolaire du 1er septembre), `StatsService`, `StatsCsv` (CSV `;` UTF-8 avec BOM pour Excel) |
 | `Kiosk/` | `KioskApi` (routes de la borne) et `KioskPairing` (code de liaison, jetons) |
 | `Audit/` | `AuditLog` et `AuditActions` : journal des actions des responsables |
@@ -62,8 +62,9 @@ Une ligne de la table `presences` = un passage (arrivée, départ facultatif). S
 - Un refus reste dans l'historique. Un membre refusé peut pointer à nouveau.
 - Corrections (fiche du membre, écran `Presences/Edit`) : passer de validé à refusé et inversement, corriger les heures d'arrivée et de départ (la date ne change pas), ou supprimer. Chaque correction est inscrite au journal avec l'ancienne et la nouvelle valeur.
 - Une présence encore `Pending` à la fin de la journée le reste (affichée « en attente » dans l'historique). Les statistiques ne comptent que les présences `Validated`, en jours distincts.
-- La règle « une présence non refusée par jour » est vérifiée à un seul endroit, `PresenceStore.AllowsNewPresence`, dans la même transaction que l'insertion. Il n'y a volontairement pas de contrainte d'unicité en base.
-- Le départ (`Depart`) n'est proposé que si le réglage « bouton départ » est activé ; il ne demande pas de validation.
+- Plusieurs passages par jour sont possibles. Un nouveau passage n'est refusé que si le membre est déjà présent (`IsPresent` : son passage le plus récent du jour, non refusé, n'a pas de départ) ; la borne peut forcer une arrivée quand le départ a été oublié. Il n'y a volontairement pas de contrainte d'unicité en base. Les statistiques comptent des jours distincts.
+- Le départ (`Depart`) ferme le passage ouvert le plus récent du jour. Il n'est proposé que si le réglage « bouton départ » est activé. Avec « validation des départs », il est `Pending` et le responsable le valide ou le refuse depuis l'accueil (`DecideDeparture`) ; refuser efface le départ et le membre redevient présent. Un nouveau passage valide d'office le départ en attente.
+- L'accueil sépare « Présents » (passage ouvert ou départ à valider) et « Partis » (`PresenceStore.Today`) ; la borne reçoit `isPresent` pour proposer l'arrivée ou le départ.
 
 ## Accès local et liaison de la borne
 
@@ -102,11 +103,3 @@ Hors périmètre actuel (spec §11) :
 - **HTTPS** sur le réseau local (aujourd'hui HTTP : les échanges de la borne ne sont pas chiffrés).
 - **Import CSV plus riche** : correspondance libre des colonnes, import Excel `.xlsx`, mise à jour des membres existants. Tout est dans `Members/MemberCsvImport.cs`.
 - **Certificat de signature de code**, pour supprimer l'avertissement SmartScreen.
-- **Plusieurs passages par jour** : la structure est prête (une ligne = un passage, pas de contrainte d'unicité en base, statistiques en jours distincts). Il reste à modifier la règle, marquée dans `PresenceStore` :
-
-  ```csharp
-  // ponytail: une présence par jour ; pour plusieurs passages (spec §5), ne garder que le refus d'une présence encore ouverte.
-  private static bool AllowsNewPresence(...)
-  ```
-
-  puis à adapter la borne (message « Tu es déjà noté aujourd'hui. » dans `kiosk.js`), `HasPresenceToday` et `Depart`.
