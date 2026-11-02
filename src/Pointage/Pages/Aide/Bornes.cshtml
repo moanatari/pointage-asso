@@ -9,7 +9,7 @@
 <p>L'enfant tape son prénom ou son code, clique sur son nom, puis confirme.</p>
 <ul>
     <li>Absent : <strong>✔ Oui, je suis arrivé</strong>.</li>
-    <li>Présent : <strong>Je pars</strong> (si le bouton « départ » est activé dans les Réglages), plus un petit lien <strong>Je viens d'arriver</strong> pour enregistrer un retour sans clore le passage précédent.</li>
+    <li>Présent : <strong>Je pars</strong> (si le bouton « départ » est activé dans les Réglages), plus un petit lien <strong>Je viens d'arriver</strong> pour un enfant affiché présent qui est parti sans appuyer sur « Je pars » : cela crée une nouvelle arrivée, et l'ancien passage reste « départ non pointé » pour que le responsable le corrige (voir <a href="/Aide/Quotidien#oubli">Au quotidien</a>).</li>
     <li><strong>✘ Non, retour</strong> revient à la recherche.</li>
 </ul>
 <p>Si le bouton « départ » est désactivé, seule l'arrivée est proposée.</p>
@@ -35,9 +35,9 @@
 <h3>Windows avec Edge (script fourni)</h3>
 <p>Sur le PC de la borne, <strong>dans la session Windows qui servira de borne</strong> (de préférence sans mot de passe ou avec ouverture automatique, pour qu'elle démarre toute seule) :</p>
 <ol>
-    <li>Ouvrez dans Edge l'adresse <code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/static/borne-kiosque.ps1</code> (même nom et même port que l'adresse de la borne, avec <code>/static/borne-kiosque.ps1</code> à la place de <code>/borne</code>) : le fichier <code>borne-kiosque.ps1</code> se télécharge. À défaut, copiez-le depuis une clé USB.</li>
+    <li>Ouvrez dans Edge l'adresse <code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/static/borne-kiosque.ps1</code> (même nom et même port que l'adresse de la borne, avec <code>/static/borne-kiosque.ps1</code> à la place de <code>/borne</code>) : le fichier <code>borne-kiosque.ps1</code> se télécharge (Edge peut avertir que ce fichier est rarement téléchargé : choisissez « Conserver »). À défaut, copiez-le depuis une clé USB.</li>
     <li>Ouvrez PowerShell (pas besoin d'être administrateur) dans le dossier du fichier et lancez, en remplaçant l'adresse par celle de la borne :
-<pre>powershell -ExecutionPolicy Bypass -File .\borne-kiosque.ps1 -Url http://PC-ACCUEIL:5080/borne</pre>
+<pre>powershell -ExecutionPolicy Bypass -File .\borne-kiosque.ps1 -Url http://PC-ACCUEIL:&lt;port&gt;/borne</pre>
     Le script vérifie l'adresse, trouve Microsoft Edge et crée dans le dossier « Démarrage » le raccourci <code>Borne Pointage</code>, qui lance <code>msedge.exe --kiosk &lt;adresse&gt; --edge-kiosk-type=fullscreen --no-first-run</code>.</li>
     <li>Fermez la session puis rouvrez-la (ou redémarrez le PC) : Edge s'ouvre en plein écran sur la borne.</li>
 </ol>
