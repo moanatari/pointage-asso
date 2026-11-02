@@ -45,7 +45,7 @@
     <tbody>
     @foreach (var m in Model.PerMember)
     {
-        <tr><td>@m.FullName</td><td>@m.Code</td><td>@m.Days</td></tr>
+        <tr><td><a href="/Members/Details/@m.MemberId">@m.FullName</a></td><td>@m.Code</td><td>@m.Days</td></tr>
     }
     </tbody>
 </table>
@@ -58,7 +58,7 @@
     {
         <tr>
             <td>@r.Presence.Day.ToString("dd/MM/yyyy")</td>
-            <td>@r.MemberName</td>
+            <td><a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a></td>
             <td>@r.Presence.ArrivedAt.ToString("HH:mm")</td>
             <td>@(r.Presence.DepartedAt?.ToString("HH:mm") ?? "—")</td>
             <td>@Model.StatusLabel(r.Presence)</td>

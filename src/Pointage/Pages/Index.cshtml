@@ -27,7 +27,7 @@
         @foreach (var r in Model.Pending)
         {
             <li>
-                <strong>@r.MemberName</strong>@(r.Age is { } age ? $", {age} ans" : "") – @r.Presence.ArrivedAt.ToString("HH:mm")
+                <a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a>@(r.Age is { } age ? $", {age} ans" : "") – @r.Presence.ArrivedAt.ToString("HH:mm")
                 <form method="post" asp-page-handler="Validate" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Valider</button></form>
                 <form method="post" asp-page-handler="Refuse" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Refuser</button></form>
             </li>
@@ -43,7 +43,7 @@
             {
                 var left = r.Presence.DepartedAt!.Value;
                 <li>
-                    <strong>@r.MemberName</strong> – parti @(DateOnly.FromDateTime(left) == Model.Today ? "" : left.ToString("dd/MM") + " ")@left.ToString("HH:mm")
+                    <a href="/Members/Details/@r.Presence.MemberId">@r.MemberName</a> – parti @(DateOnly.FromDateTime(left) == Model.Today ? "" : left.ToString("dd/MM") + " ")@left.ToString("HH:mm")
                     <form method="post" asp-page-handler="ValidateDeparture" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Valider</button></form>
                     <form method="post" asp-page-handler="RefuseDeparture" asp-route-id="@r.Presence.Id" class="inline"><button type="submit">Refuser</button></form>
                 </li>
