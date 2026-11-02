@@ -53,7 +53,7 @@ Les stores (`MemberStore`, `PresenceStore`…) sont des singletons injectés ; u
 
 1. **Aucune donnée personnelle ne quitte le poste** : pas de télémétrie, seul appel réseau sortant = API GitHub des Releases. Aucun fichier `.db`, `.sqlite`, `.bak` dans le dépôt (public).
 2. **Pages du responsable en local uniquement** : `LocalOnlyMiddleware` répond 404 à toute adresse non bouclée, sauf `/borne`, `/api/borne/*` et `/static/*`. Toute nouvelle route hors de ces trois préfixes est donc protégée ; ne jamais élargir `IsPublicPath` sans test.
-3. **Minimisation à la borne** : elle ne reçoit que prénom, initiale du nom, code et `hasPresenceToday` (type `KioskMember`). Jamais de nom complet, date de naissance ou coordonnées. Toutes les routes `/api/borne/*` (sauf `pair`) exigent un jeton de borne valide.
+3. **Minimisation à la borne** : elle ne reçoit que prénom, initiale du nom, code et `isPresent` (type `KioskMember`). Jamais de nom complet, date de naissance ou coordonnées. Toutes les routes `/api/borne/*` (sauf `pair`) exigent un jeton de borne valide.
 4. **Interface en français uniquement**, sans bibliothèque de traduction.
 5. **Statistiques** : présences validées uniquement, en jours distincts. Une journée = jour calendaire local du poste.
 6. Codes membres : 6 caractères de `ACDEFGHJKMNPQRTUVWXY34679`. Mots de passe : PBKDF2-SHA256, 600 000 itérations, 8 caractères minimum.
