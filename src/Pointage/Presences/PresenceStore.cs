@@ -20,12 +20,15 @@ public static class PresenceStatusExtensions
 
 public enum PresenceSource { Kiosk, Manual }
 
-public enum CheckInResult { Created, AlreadyToday }
+public enum CheckInResult { Created, AlreadyPresent }
 
+// Une ligne = un passage (arrivée, départ éventuel). DepartureStatus : null = pas de départ, sinon Pending ou Validated.
 public sealed record Presence(long Id, long MemberId, DateOnly Day, DateTime ArrivedAt, DateTime? DepartedAt,
-    PresenceStatus Status, PresenceSource Source, long? DecidedBy, DateTime? DecidedAt);
+    PresenceStatus Status, PresenceSource Source, long? DecidedBy, DateTime? DecidedAt, PresenceStatus? DepartureStatus);
 
 public sealed record PresenceRow(Presence Presence, string MemberName, int? Age, string? DecidedByName);
+
+public sealed record TodayBoard(IReadOnlyList<PresenceRow> Present, IReadOnlyList<PresenceRow> Departed);
 
 public sealed class PresenceStore(Db db, TimeProvider time)
 {
@@ -41,13 +44,14 @@ public sealed class PresenceStore(Db db, TimeProvider time)
         public PresenceSource Source { get; set; }
         public long? DecidedBy { get; set; }
         public DateTime? DecidedAt { get; set; }
+        public PresenceStatus? DepartureStatus { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public DateOnly? BirthDate { get; set; }
         public DateTime? AnonymizedAt { get; set; }
         public string? DecidedByName { get; set; }
 
-        public Presence ToPresence() => new(Id, MemberId, Day, ArrivedAt, DepartedAt, Status, Source, DecidedBy, DecidedAt);
+        public Presence ToPresence() => new(Id, MemberId, Day, ArrivedAt, DepartedAt, Status, Source, DecidedBy, DecidedAt, DepartureStatus);
 
         public PresenceRow ToRow()
         {
@@ -60,22 +64,24 @@ public sealed class PresenceStore(Db db, TimeProvider time)
 
     private const string PresenceColumns =
         "p.id AS Id, p.member_id AS MemberId, p.day AS Day, p.arrived_at AS ArrivedAt, p.departed_at AS DepartedAt, p.status AS Status, " +
-        "p.source AS Source, p.decided_by AS DecidedBy, p.decided_at AS DecidedAt";
+        "p.source AS Source, p.decided_by AS DecidedBy, p.decided_at AS DecidedAt, p.departure_status AS DepartureStatus";
 
-    // ponytail: une présence par jour ; pour plusieurs passages (spec §5), ne garder que le refus d'une présence encore ouverte.
-    private static bool AllowsNewPresence(SqliteConnection c, SqliteTransaction tx, long memberId, DateOnly day) =>
-        c.ExecuteScalar<long>("SELECT COUNT(*) FROM presences WHERE member_id=@memberId AND day=@day AND status<>'Refused'",
-            new { memberId, day }, tx) == 0;
+    // Présent = son dernier passage non refusé du jour est ouvert (pas de départ). Un départ en attente compte comme parti.
+    private static bool IsPresent(SqliteConnection c, SqliteTransaction? tx, long memberId, DateOnly today) =>
+        c.ExecuteScalar<long?>(
+            """
+            SELECT departed_at IS NULL FROM presences WHERE member_id=@memberId AND day=@today AND status<>'Refused'
+            ORDER BY arrived_at DESC, id DESC LIMIT 1
+            """, new { memberId, today }, tx) == 1;
 
-    // Vérification et insertion dans une seule transaction (BEGIN IMMEDIATE) : deux appuis simultanés ne créent qu'une présence.
-    private bool TryInsert(long memberId, DateTime arrivedAt, PresenceStatus status, PresenceSource source, long? accountId, out long id)
+    private long Insert(SqliteConnection c, SqliteTransaction tx, long memberId, DateTime arrivedAt, PresenceStatus status,
+        PresenceSource source, long? accountId)
     {
-        using var c = db.Open();
-        using var tx = c.BeginTransaction();
-        var day = DateOnly.FromDateTime(arrivedAt);
-        id = 0;
-        if (!AllowsNewPresence(c, tx, memberId, day)) return false;
-        id = c.ExecuteScalar<long>(
+        // Une nouvelle arrivée confirme le départ précédent encore en attente : s'il revient, c'est qu'il était bien parti.
+        // Le refus d'un départ n'est donc possible qu'avant un nouveau passage, ce qui évite deux passages ouverts.
+        c.Execute("UPDATE presences SET departure_status='Validated' WHERE member_id=@memberId AND departure_status='Pending'",
+            new { memberId }, tx);
+        return c.ExecuteScalar<long>(
             """
             INSERT INTO presences(member_id, day, arrived_at, status, source, decided_by, decided_at)
             VALUES(@memberId, @day, @arrivedAt, @status, @source, @accountId, @decidedAt);
@@ -83,30 +89,62 @@ public sealed class PresenceStore(Db db, TimeProvider time)
             """,
             new
             {
-                memberId, day, arrivedAt, status = status.ToString(), source = source.ToString(), accountId,
+                memberId, day = DateOnly.FromDateTime(arrivedAt), arrivedAt, status = status.ToString(), source = source.ToString(), accountId,
                 decidedAt = accountId is null ? (DateTime?)null : time.Now(),
             }, tx);
-        tx.Commit();
-        return true;
     }
 
-    public CheckInResult CheckIn(long memberId) =>
-        TryInsert(memberId, time.Now(), PresenceStatus.Pending, PresenceSource.Kiosk, null, out _) ? CheckInResult.Created : CheckInResult.AlreadyToday;
+    // Vérification et insertion dans une seule transaction (BEGIN IMMEDIATE) : deux appuis simultanés ne créent qu'un passage.
+    // force : la borne a confirmé une nouvelle arrivée alors que l'enfant semble encore là (départ oublié).
+    public CheckInResult CheckIn(long memberId, bool force = false)
+    {
+        using var c = db.Open();
+        using var tx = c.BeginTransaction();
+        if (!force && IsPresent(c, tx, memberId, time.Today())) return CheckInResult.AlreadyPresent;
+        Insert(c, tx, memberId, time.Now(), PresenceStatus.Pending, PresenceSource.Kiosk, null);
+        tx.Commit();
+        return CheckInResult.Created;
+    }
 
-    public long AddManual(long memberId, DateTime arrivedAt, long accountId) =>
-        TryInsert(memberId, arrivedAt, PresenceStatus.Validated, PresenceSource.Manual, accountId, out var id)
-            ? id
-            : throw new InvalidOperationException("Ce membre a déjà une présence ce jour-là.");
+    // Saisie d'un responsable : jamais refusée, même si l'enfant a déjà un passage ce jour-là.
+    public long AddManual(long memberId, DateTime arrivedAt, long accountId)
+    {
+        using var c = db.Open();
+        using var tx = c.BeginTransaction();
+        var id = Insert(c, tx, memberId, arrivedAt, PresenceStatus.Validated, PresenceSource.Manual, accountId);
+        tx.Commit();
+        return id;
+    }
 
-    public bool Depart(long memberId)
+    public bool Depart(long memberId, bool needsValidation)
     {
         using var c = db.Open();
         return c.Execute(
             """
-            UPDATE presences SET departed_at=@now WHERE id=(
+            UPDATE presences SET departed_at=@now, departure_status=@status WHERE id=(
               SELECT id FROM presences WHERE member_id=@memberId AND day=@today AND status<>'Refused' AND departed_at IS NULL
               ORDER BY arrived_at DESC, id DESC LIMIT 1)
-            """, new { memberId, today = time.Today(), now = time.Now() }) > 0;
+            """,
+            new
+            {
+                memberId, today = time.Today(), now = time.Now(),
+                status = (needsValidation ? PresenceStatus.Pending : PresenceStatus.Validated).ToString(),
+            }) > 0;
+    }
+
+    // Seulement un départ encore en attente : déjà validé d'office par un retour, il n'est plus refusable.
+    // Refuser efface le départ : l'enfant redevient présent.
+    public bool DecideDeparture(long presenceId, bool validate)
+    {
+        using var c = db.Open();
+        var set = validate ? "departure_status='Validated'" : "departed_at=NULL, departure_status=NULL";
+        return c.Execute($"UPDATE presences SET {set} WHERE id=@presenceId AND departure_status='Pending'", new { presenceId }) > 0;
+    }
+
+    public int ValidatePendingDepartures()
+    {
+        using var c = db.Open();
+        return c.Execute("UPDATE presences SET departure_status='Validated' WHERE departure_status='Pending'");
     }
 
     public void Decide(long presenceId, PresenceStatus status, long accountId)
@@ -125,11 +163,16 @@ public sealed class PresenceStore(Db db, TimeProvider time)
             new { accountId, ids = ids.ToArray(), now = time.Now() });
     }
 
+    // Un départ saisi ou corrigé par un responsable est réputé validé.
     public void UpdateTimes(long presenceId, DateTime arrivedAt, DateTime? departedAt)
     {
         using var c = db.Open();
-        c.Execute("UPDATE presences SET day=@day, arrived_at=@arrivedAt, departed_at=@departedAt WHERE id=@presenceId",
-            new { presenceId, day = DateOnly.FromDateTime(arrivedAt), arrivedAt, departedAt });
+        c.Execute("UPDATE presences SET day=@day, arrived_at=@arrivedAt, departed_at=@departedAt, departure_status=@departureStatus WHERE id=@presenceId",
+            new
+            {
+                presenceId, day = DateOnly.FromDateTime(arrivedAt), arrivedAt, departedAt,
+                departureStatus = departedAt is null ? null : PresenceStatus.Validated.ToString(),
+            });
     }
 
     public void Delete(long presenceId)
@@ -144,11 +187,27 @@ public sealed class PresenceStore(Db db, TimeProvider time)
         return c.QuerySingleOrDefault<Row>($"SELECT {PresenceColumns} FROM presences p WHERE p.id=@id", new { id })?.ToPresence();
     }
 
-    public bool HasPresenceToday(long memberId)
+    public bool IsPresent(long memberId)
     {
         using var c = db.Open();
-        return c.ExecuteScalar<long>("SELECT COUNT(*) FROM presences WHERE member_id=@memberId AND day=@today AND status<>'Refused'",
-            new { memberId, today = time.Today() }) > 0;
+        return IsPresent(c, null, memberId, time.Today());
+    }
+
+    // Tous jours confondus : un départ oublié la veille doit rester visible pour être décidé.
+    public IReadOnlyList<PresenceRow> PendingDepartures() => Query("p.departure_status='Pending' AND p.status<>'Refused'", new { });
+
+    public TodayBoard Today() => Split(Query("p.day=@today AND p.status<>'Refused'", new { today = time.Today() }));
+
+    // Le passage le plus récent de chaque membre est « présent » s'il est ouvert ou si son départ attend une validation
+    // (un départ pointé par erreur ne doit pas faire disparaître l'enfant). Tout le reste est « parti »,
+    // y compris un passage ancien resté sans départ (départ non pointé).
+    public static TodayBoard Split(IReadOnlyList<PresenceRow> rows)
+    {
+        var sorted = rows.OrderByDescending(r => r.Presence.ArrivedAt).ThenByDescending(r => r.Presence.Id).ToList();
+        var present = sorted.DistinctBy(r => r.Presence.MemberId)
+            .Where(r => r.Presence.DepartedAt is null || r.Presence.DepartureStatus == PresenceStatus.Pending)
+            .Select(r => r.Presence.Id).ToHashSet();
+        return new(sorted.Where(r => present.Contains(r.Presence.Id)).ToList(), sorted.Where(r => !present.Contains(r.Presence.Id)).ToList());
     }
 
     public IReadOnlyList<PresenceRow> PendingToday() => Query("p.day=@today AND p.status='Pending'", new { today = time.Today() });

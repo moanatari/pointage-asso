@@ -37,7 +37,7 @@ public static class KioskApi
         api.MapGet("/search", (string? q, MemberStore members, PresenceStore presences) =>
             (q?.Trim().Length ?? 0) < 2
                 ? []
-                : members.Search(q!, 8).Select(m => new KioskMember(m.Id, m.KioskLabel, m.Code, presences.HasPresenceToday(m.Id))).ToList());
+                : members.Search(q!, 8).Select(m => new KioskMember(m.Id, m.KioskLabel, m.Code, presences.IsPresent(m.Id))).ToList());
 
         // Un id inconnu ou anonymisé est refusé : la borne ne doit pas pouvoir créer de présence pour n'importe quel id.
         api.MapPost("/checkin", (MemberRequest req, MemberStore members, PresenceStore presences) =>
@@ -46,7 +46,7 @@ public static class KioskApi
                 : Results.NotFound());
 
         api.MapPost("/depart", (MemberRequest req, MemberStore members, PresenceStore presences) =>
-            IsCheckable(members, req.MemberId) ? Results.Ok(new { ok = presences.Depart(req.MemberId) }) : Results.NotFound());
+            IsCheckable(members, req.MemberId) ? Results.Ok(new { ok = presences.Depart(req.MemberId, false) }) : Results.NotFound());
 
         api.MapGet("/config", (SettingsStore settings) =>
         {

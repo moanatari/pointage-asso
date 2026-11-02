@@ -184,7 +184,7 @@ public class ManagerPagesTests
     }
 
     [Fact]
-    public async Task AddPresence_Twice_ShowsErrorSecondTime()
+    public async Task AddPresence_Twice_CreatesTwoPassages()
     {
         using var app = new AppFactory();
         var client = await app.LoggedInClientAsync(Role.Manager);
@@ -192,9 +192,8 @@ public class ManagerPagesTests
         var fields = new Dictionary<string, string> { ["MemberId"] = lucas.Id.ToString(), ["Day"] = "2026-10-20", ["Time"] = "09:30" };
         var url = $"/Presences/Add?memberId={lucas.Id}";
         (await AppFactory.PostFormAsync(client, url, "/Presences/Add", fields)).EnsureSuccessStatusCode();
-        var second = await AppFactory.PostFormAsync(client, url, "/Presences/Add", fields);
-        Assert.Contains("Ce membre a déjà une présence ce jour-là.", await Text(second));
-        Assert.Single(app.Services.GetRequiredService<PresenceStore>().ForMember(lucas.Id, 10));
+        (await AppFactory.PostFormAsync(client, url, "/Presences/Add", fields)).EnsureSuccessStatusCode();
+        Assert.Equal(2, app.Services.GetRequiredService<PresenceStore>().ForMember(lucas.Id, 10).Count);
     }
 
     [Fact]
