@@ -225,6 +225,29 @@ public class PresenceTests
     }
 
     [Fact]
+    public void Depart_Twice_WithOlderOpenPassage_DoesNotStampOldPassage()
+    {
+        _store.CheckIn(_lucas); // A : départ oublié
+        _time.Advance(TimeSpan.FromHours(1));
+        _store.CheckIn(_lucas, force: true); // B
+        _time.Advance(TimeSpan.FromMinutes(5));
+        Assert.True(_store.Depart(_lucas, false));
+        Assert.False(_store.Depart(_lucas, false)); // 2e borne, écran resté ouvert
+        var a = _store.ForMember(_lucas, 5).Single(r => r.Presence.ArrivedAt == new DateTime(2026, 10, 27, 17, 0, 0));
+        Assert.Null(a.Presence.DepartedAt);
+    }
+
+    [Fact]
+    public void AddManual_Backdated_DoesNotValidateTodaysPendingDeparture()
+    {
+        _store.CheckIn(_lucas);
+        _time.Advance(TimeSpan.FromMinutes(30));
+        _store.Depart(_lucas, true);
+        _store.AddManual(_lucas, new DateTime(2026, 10, 26, 14, 0, 0), _admin);
+        Assert.Single(_store.PendingDepartures());
+    }
+
+    [Fact]
     public void Depart_WithValidation_IsPending()
     {
         _store.CheckIn(_lucas);

@@ -49,8 +49,10 @@ public static class KioskApi
         api.MapPost("/depart", (MemberRequest req, MemberStore members, PresenceStore presences, SettingsStore settings) =>
         {
             if (!IsCheckable(members, req.MemberId)) return Results.NotFound();
-            var pending = settings.Get().DepartureValidation;
-            return Results.Ok(new { ok = presences.Depart(req.MemberId, pending), pending });
+            var s = settings.Get();
+            // Une borne chargée avant le changement de réglage ne doit plus pouvoir pointer un départ.
+            if (!s.KioskDeparture) return Results.Ok(new { ok = false, pending = false });
+            return Results.Ok(new { ok = presences.Depart(req.MemberId, s.DepartureValidation), pending = s.DepartureValidation });
         });
 
         api.MapGet("/config", (SettingsStore settings) =>

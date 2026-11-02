@@ -11,7 +11,7 @@ namespace Pointage.Pages.Admin;
 
 public class SettingsModel(SettingsStore settings, PresenceStore presences, AuditLog audit) : PageModel
 {
-    [BindProperty] public string OrganizationName { get; set; } = "";
+    [BindProperty] public string? OrganizationName { get; set; }
     [BindProperty, Range(1, 120, ErrorMessage = "La durée de conservation doit être comprise entre 1 et 120 mois.")]
     public int RetentionMonths { get; set; }
     [BindProperty] public bool KioskKeyboard { get; set; }
@@ -49,7 +49,7 @@ public class SettingsModel(SettingsStore settings, PresenceStore presences, Audi
             NetworkPort.RestartService();
             return page;
         }
-        return PortResult($"Port enregistré. Redémarrez l'application pour l'appliquer, puis ouvrez http://localhost:{p}/", false);
+        return PortResult($"Port enregistré. Il sera appliqué au prochain démarrage du service Pointage.", false);
     }
 
     IActionResult PortResult(string message, bool failed)

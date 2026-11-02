@@ -66,7 +66,7 @@ public sealed class PresenceStore(Db db, TimeProvider time)
         "p.id AS Id, p.member_id AS MemberId, p.day AS Day, p.arrived_at AS ArrivedAt, p.departed_at AS DepartedAt, p.status AS Status, " +
         "p.source AS Source, p.decided_by AS DecidedBy, p.decided_at AS DecidedAt, p.departure_status AS DepartureStatus";
 
-    // Présent = son dernier passage non refusé du jour est ouvert (pas de départ). Un départ en attente compte comme parti.
+    // Présent = son dernier passage non refusé du jour est ouvert (pas de départ). Un départ en attente = parti pour la borne (présent à l'accueil, voir Split).
     private static bool IsPresent(SqliteConnection c, SqliteTransaction? tx, long memberId, DateOnly today) =>
         c.ExecuteScalar<long?>(
             """
@@ -77,10 +77,10 @@ public sealed class PresenceStore(Db db, TimeProvider time)
     private long Insert(SqliteConnection c, SqliteTransaction tx, long memberId, DateTime arrivedAt, PresenceStatus status,
         PresenceSource source, long? accountId)
     {
-        // Une nouvelle arrivée confirme le départ précédent encore en attente : s'il revient, c'est qu'il était bien parti.
+        // Une nouvelle arrivée (pas antidatée avant le départ) confirme le départ précédent encore en attente : s'il revient, c'est qu'il était bien parti.
         // Le refus d'un départ n'est donc possible qu'avant un nouveau passage, ce qui évite deux passages ouverts.
-        c.Execute("UPDATE presences SET departure_status='Validated' WHERE member_id=@memberId AND departure_status='Pending'",
-            new { memberId }, tx);
+        c.Execute("UPDATE presences SET departure_status='Validated' WHERE member_id=@memberId AND departure_status='Pending' AND departed_at <= @arrivedAt",
+            new { memberId, arrivedAt }, tx);
         return c.ExecuteScalar<long>(
             """
             INSERT INTO presences(member_id, day, arrived_at, status, source, decided_by, decided_at)
@@ -122,8 +122,8 @@ public sealed class PresenceStore(Db db, TimeProvider time)
         return c.Execute(
             """
             UPDATE presences SET departed_at=@now, departure_status=@status WHERE id=(
-              SELECT id FROM presences WHERE member_id=@memberId AND day=@today AND status<>'Refused' AND departed_at IS NULL
-              ORDER BY arrived_at DESC, id DESC LIMIT 1)
+              SELECT id FROM presences WHERE member_id=@memberId AND day=@today AND status<>'Refused'
+              ORDER BY arrived_at DESC, id DESC LIMIT 1) AND departed_at IS NULL
             """,
             new
             {

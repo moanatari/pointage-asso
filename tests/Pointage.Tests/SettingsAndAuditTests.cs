@@ -75,6 +75,18 @@ public class SettingsAndAuditTests
         Assert.Empty(presences.PendingDepartures());
     }
 
+    [Fact]
+    public async Task Settings_EmptyOrganizationName_NoEnglishValidationError()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+        var html = await (await AppFactory.PostFormAsync(client, "/Admin/Settings", "/Admin/Settings", new()
+        {
+            ["OrganizationName"] = "", ["RetentionMonths"] = "12", ["KioskKeyboard"] = "true", ["KioskDeparture"] = "true", ["DepartureValidation"] = "false",
+        })).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("field is required.</li>", html);
+    }
+
     static int FreePort()
     {
         var l = new TcpListener(IPAddress.Loopback, 0);
@@ -98,7 +110,7 @@ public class SettingsAndAuditTests
         var html = await PostPortAsync(client, port.ToString());
 
         Assert.DoesNotContain("field is required.</li>", html);
-        Assert.Contains($"Port enregistré. Redémarrez l'application pour l'appliquer, puis ouvrez http://localhost:{port}/", html);
+        Assert.Contains($"Port enregistré. Il sera appliqué au prochain démarrage du service Pointage.", html);
         Assert.Equal(port, app.Services.GetRequiredService<SettingsStore>().Get().Port);
         Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(5), e => e.Details == $"Port 5080 → {port}");
     }
