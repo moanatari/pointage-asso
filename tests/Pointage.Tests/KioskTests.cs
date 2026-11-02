@@ -170,6 +170,19 @@ public class KioskTests
     }
 
     [Fact]
+    public async Task Depart_WhenDepartureDisabled_ReturnsNotOk()
+    {
+        using var app = new AppFactory(LanIp);
+        var id = CreateLucas(app);
+        var client = await PairedClientAsync(app);
+        await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id });
+        var settings = app.Services.GetRequiredService<Pointage.Settings.SettingsStore>();
+        settings.Save(settings.Get() with { KioskDeparture = false });
+        Assert.Equal("""{"ok":false,"pending":false}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
+        Assert.True(app.Services.GetRequiredService<PresenceStore>().IsPresent(id));
+    }
+
+    [Fact]
     public async Task Depart_WithoutValidation_ReturnsNotPending()
     {
         using var app = new AppFactory(LanIp);
