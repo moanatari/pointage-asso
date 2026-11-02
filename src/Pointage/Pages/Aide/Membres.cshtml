@@ -1,0 +1,29 @@
+@page
+@{
+    ViewData["Title"] = "Membres";
+}
+<p class="help-nav"><a href="/Aide/Quotidien">&larr; Au quotidien</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Bornes">Bornes &rarr;</a></p>
+<h1>Membres</h1>
+<h2>Ajouter un membre</h2>
+<ol>
+    <li>Menu <strong>Membres</strong>, puis <strong>Nouveau membre</strong>.</li>
+    <li>Remplissez au moins le nom et le prénom ; la personne à contacter est facultative.</li>
+    <li>Cliquez sur <strong>Enregistrer</strong>. Un code de 6 caractères est attribué automatiquement.</li>
+</ol>
+<p>Attention : n'écrivez dans « Commentaire » aucune information sensible (santé, religion, situation familiale…).</p>
+<h2>Modifier un membre</h2>
+<p>Ouvrez sa fiche (clic sur son nom), cliquez sur <strong>Modifier</strong>, puis <strong>Enregistrer</strong>.</p>
+<h2>Importer un fichier CSV</h2>
+<ol>
+    <li><strong>Membres</strong>, puis <strong>Importer</strong>.</li>
+    <li>Cliquez sur <strong>Télécharger le modèle</strong> et remplissez-le (Excel ou tableur). Colonnes : nom, prenom, date_naissance, telephone, email, commentaire, contact_nom, contact_prenom, contact_date_naissance, contact_telephone, contact_email. Séparateur « ; », 1 Mo maximum. Seuls le nom et le prénom sont obligatoires.</li>
+    <li>Choisissez le fichier et cliquez sur <strong>Prévisualiser</strong> : l'aperçu indique les lignes prêtes, les lignes en erreur et les doublons (ignorés).</li>
+    <li>Si c'est correct, cliquez sur <strong>Confirmer l'import</strong>.</li>
+</ol>
+<h2>Codes et carte</h2>
+<p>Chaque membre a un code de 6 caractères qu'il peut saisir à la borne à la place de son prénom. Sur sa fiche, <strong>Imprimer la carte</strong> produit une carte à lui remettre.</p>
+<h2>Exporter les données d'un membre</h2>
+<p>Sur la fiche, <strong>Exporter les données</strong> affiche toutes les données personnelles de la personne (droit d'accès) ; <strong>Imprimer</strong> permet de les lui remettre.</p>
+<h2>Anonymiser ou supprimer</h2>
+<p>Sur la fiche, <strong>Anonymiser</strong> efface l'identité de la personne mais conserve ses présences pour les statistiques. <strong>Supprimer</strong> efface aussi ses présences. Dans les deux cas l'action est définitive. Les membres inactifs depuis longtemps peuvent être anonymisés en une fois : voir « Purge RGPD » dans <a href="/Aide/Administration">Administration</a>.</p>
+<p class="help-nav"><a href="/Aide/Quotidien">&larr; Au quotidien</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Bornes">Bornes &rarr;</a></p>

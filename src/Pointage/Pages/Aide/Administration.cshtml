@@ -1,0 +1,28 @@
+@page
+@{
+    ViewData["Title"] = "Administration";
+}
+<p class="help-nav"><a href="/Aide/Historique">&larr; Historique et statistiques</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Depannage">Dépannage et questions fréquentes &rarr;</a></p>
+<h1>Administration</h1>
+<p class="note">Réservé au super admin.</p>
+<p>Tout part du menu <strong>Réglages</strong> ; la section « Administration » en bas de page mène aux autres écrans.</p>
+<h2>Réglages</h2>
+<ul>
+    <li><strong>Nom de la structure</strong>.</li>
+    <li><strong>Durée de conservation des membres inactifs</strong> (1 à 120 mois) : au-delà, un membre est proposé à la purge.</li>
+    <li><strong>Afficher le clavier à la borne</strong>.</li>
+    <li><strong>Afficher le bouton « départ » à la borne</strong> : les enfants peuvent pointer leur départ. Les anciennes installations conservent leur valeur ; cochez la case pour l'activer.</li>
+    <li><strong>Faire valider les départs par un responsable</strong> : désactivé, un départ pointé est pris en compte tout de suite ; activé, il apparaît dans « Départs à valider » à l'Accueil. Changer ce réglage n'affecte pas les départs déjà enregistrés.</li>
+</ul>
+<p>Cliquez sur <strong>Enregistrer</strong>.</p>
+<h2>Port réseau</h2>
+<p>Réservé à la personne qui installe. Dans la section « Port réseau », saisissez un port entre 1024 et 65535 et cliquez sur <strong>Changer le port</strong>. L'application redémarre d'elle-même ; <strong>chaque borne doit ensuite être reconfigurée</strong> avec la nouvelle adresse (page Bornes, puis script de mode kiosque). Si l'interface devient inaccessible, voir <a href="/Aide/Depannage">Dépannage</a> (<code>set-port</code>).</p>
+<h2>Comptes</h2>
+<p>Liste des comptes. Sur chacun : <strong>Réinitialiser le mot de passe</strong> et <strong>Désactiver</strong> / <strong>Réactiver</strong>. En bas, « Nouveau compte » : identifiant, mot de passe (8 caractères minimum), rôle, puis <strong>Créer le compte</strong>. Un responsable gère les présences et les membres ; seul le super admin accède à l'administration.</p>
+<h2>Journal</h2>
+<p>Liste des actions faites par les responsables (qui, quoi, quand). Il identifie les membres par leur numéro, jamais par leur nom.</p>
+<h2>Purge RGPD</h2>
+<p>Liste les membres sans présence depuis plus longtemps que la durée de conservation. Vérifiez la liste puis cliquez sur <strong>Anonymiser ces N membres</strong> : leur identité est effacée, leurs présences restent comptées dans les statistiques. Action définitive.</p>
+<h2>Mises à jour</h2>
+<p>Menu <strong>Mises à jour</strong> : <strong>Vérifier maintenant</strong> interroge GitHub (seul accès réseau sortant de l'application, sans donnée personnelle). Si une version est disponible, <strong>Mettre à jour</strong> la télécharge et redémarre le logiciel.</p>
+<p class="help-nav"><a href="/Aide/Historique">&larr; Historique et statistiques</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Depannage">Dépannage et questions fréquentes &rarr;</a></p>

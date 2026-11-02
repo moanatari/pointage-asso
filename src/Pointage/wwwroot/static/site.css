@@ -30,3 +30,7 @@ form.inline { display: inline; margin-left: .4rem; }
 .card .code { font-size: 3rem; letter-spacing: .3em; font-weight: bold; }
 .muted { color: #666; }
 @media print { nav, .no-print { display: none; } body { background: #fff; } }
+.box { border: 1px solid #2f5d8a; border-radius: .5rem; padding: .25rem 1rem; margin: 1rem 0; max-width: 40rem; }
+.help-nav { color: #555; }
+.note { font-style: italic; }
+pre { background: #f2f2f2; padding: .5rem; overflow-x: auto; }

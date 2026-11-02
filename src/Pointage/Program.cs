@@ -65,6 +65,8 @@ builder.Services.AddRazorPages(o =>
     o.Conventions.AllowAnonymousToPage("/Login");
     o.Conventions.AllowAnonymousToPage("/Setup");
     o.Conventions.AllowAnonymousToFolder("/Borne");
+    // Aide accessible sans connexion (utile quand on a perdu son mot de passe) ; reste locale grâce à LocalOnlyMiddleware.
+    o.Conventions.AllowAnonymousToFolder("/Aide");
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
