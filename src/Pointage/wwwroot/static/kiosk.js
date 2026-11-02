@@ -36,7 +36,7 @@
   }
 
   const q = $("q"), results = $("results"), error = $("error");
-  const yes = $("yes"), no = $("no"), leave = $("leave");
+  const arrive = $("arrive"), no = $("no"), leave = $("leave"), again = $("arrive-again");
   let config = { keyboard: false, departure: false };
   let selected = null, searchTimer, idleTimer, homeTimer;
 
@@ -87,14 +87,18 @@
   function choose(m) {
     selected = m;
     $("who").textContent = `${m.label} · ${m.code}`;
-    leave.hidden = !(config.departure && m.hasPresenceToday);
-    for (const b of [yes, no, leave]) b.disabled = false;
+    // Déjà présent et départ activé : « Je pars » est l'action principale, l'arrivée devient un lien secondaire.
+    const departing = config.departure && m.isPresent;
+    arrive.hidden = departing;
+    leave.hidden = !departing;
+    again.hidden = !departing;
+    for (const b of [arrive, no, leave, again]) b.disabled = false;
     show("step-confirm");
   }
 
   // Boutons désactivés dès le premier appui : un double appui n'envoie qu'une requête.
   async function act(fn) {
-    for (const b of [yes, no, leave]) b.disabled = true;
+    for (const b of [arrive, no, leave, again]) b.disabled = true;
     try {
       done(await fn(selected));
     } catch {
@@ -109,14 +113,17 @@
     homeTimer = setTimeout(home, 5000);
   }
 
-  yes.addEventListener("click", () => act(async m => {
-    const r = await api("checkin", { memberId: m.id });
+  const checkIn = force => act(async m => {
+    const r = await api("checkin", { memberId: m.id, force });
     return r.result === "created"
       ? `Merci ${firstName(m.label)}, ton arrivée est notée ! Va voir le responsable pour qu'il te valide.`
-      : "Tu es déjà noté aujourd'hui.";
-  }));
+      : "Tu es déjà noté comme présent.";
+  });
+  arrive.addEventListener("click", () => checkIn(false));
+  again.addEventListener("click", () => checkIn(true));
   leave.addEventListener("click", () => act(async m => {
     const r = await api("depart", { memberId: m.id });
+    if (r.ok && r.pending) return `Au revoir ${firstName(m.label)}, ton départ est noté ! Va voir le responsable pour qu'il le valide.`;
     return r.ok ? `Au revoir ${firstName(m.label)}, ton départ est noté !` : "Ton départ n'a pas pu être noté, signale-toi au responsable.";
   }));
   no.addEventListener("click", home);

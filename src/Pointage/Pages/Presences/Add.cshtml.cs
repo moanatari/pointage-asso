@@ -35,16 +35,8 @@ public class AddModel(MemberStore members, PresenceStore presences, AuditLog aud
             Error = "La date et l'heure sont obligatoires.";
             return Page();
         }
-        try
-        {
-            var id = presences.AddManual(Selected.Id, day.ToDateTime(t), User.AccountId());
-            audit.Write(User.AccountId(), AuditActions.PresenceAdd, Selected.Id, $"Présence n° {id} ajoutée le {day:dd/MM/yyyy} à {t:HH:mm}");
-        }
-        catch (InvalidOperationException e)
-        {
-            Error = e.Message;
-            return Page();
-        }
+        var id = presences.AddManual(Selected.Id, day.ToDateTime(t), User.AccountId());
+        audit.Write(User.AccountId(), AuditActions.PresenceAdd, Selected.Id, $"Présence n° {id} ajoutée le {day:dd/MM/yyyy} à {t:HH:mm}");
         return RedirectToPage("/Members/Details", new { id = Selected.Id });
     }
 

@@ -117,10 +117,10 @@ public class KioskTests
         Assert.Equal("[]", await client.GetStringAsync("/api/borne/search?q=l"));
         using var json = JsonDocument.Parse(await client.GetStringAsync("/api/borne/search?q=luc"));
         var m = Assert.Single(json.RootElement.EnumerateArray());
-        Assert.Equal(["id", "label", "code", "hasPresenceToday"], m.EnumerateObject().Select(p => p.Name));
+        Assert.Equal(["id", "label", "code", "isPresent"], m.EnumerateObject().Select(p => p.Name));
         Assert.Equal(id, m.GetProperty("id").GetInt64());
         Assert.Equal("Lucas D.", m.GetProperty("label").GetString());
-        Assert.False(m.GetProperty("hasPresenceToday").GetBoolean());
+        Assert.False(m.GetProperty("isPresent").GetBoolean());
     }
 
     [Fact]
@@ -137,7 +137,56 @@ public class KioskTests
         Assert.Equal("created", await CheckIn());
         Assert.Equal("already", await CheckIn());
         Assert.Equal(PresenceStatus.Pending, Assert.Single(app.Services.GetRequiredService<PresenceStore>().PendingToday()).Presence.Status);
-        Assert.Contains("\"hasPresenceToday\":true", await client.GetStringAsync("/api/borne/search?q=lucas"));
+        Assert.Contains("\"isPresent\":true", await client.GetStringAsync("/api/borne/search?q=lucas"));
+    }
+
+    [Fact]
+    public async Task CheckIn_WhilePresent_ReturnsAlready_ThenForceCreates()
+    {
+        using var app = new AppFactory(LanIp);
+        var id = CreateLucas(app);
+        var client = await PairedClientAsync(app);
+
+        async Task<string?> CheckIn(bool force) =>
+            (await (await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id, force })).Content.ReadFromJsonAsync<JsonElement>())
+                .GetProperty("result").GetString();
+
+        Assert.Equal("created", await CheckIn(false));
+        Assert.Equal("already", await CheckIn(false));
+        Assert.Equal("created", await CheckIn(true));
+        Assert.Equal(2, app.Services.GetRequiredService<PresenceStore>().PendingToday().Count);
+    }
+
+    [Fact]
+    public async Task Depart_WithValidation_ReturnsPending()
+    {
+        using var app = new AppFactory(LanIp);
+        var id = CreateLucas(app);
+        var settings = app.Services.GetRequiredService<Pointage.Settings.SettingsStore>();
+        settings.Save(settings.Get() with { DepartureValidation = true });
+        var client = await PairedClientAsync(app);
+        await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id });
+        Assert.Equal("""{"ok":true,"pending":true}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Depart_WithoutValidation_ReturnsNotPending()
+    {
+        using var app = new AppFactory(LanIp);
+        var id = CreateLucas(app);
+        var client = await PairedClientAsync(app);
+        await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id });
+        Assert.Contains("\"pending\":false", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task BornePage_HasArriveLeaveAndArriveAgainButtons()
+    {
+        using var app = new AppFactory(LanIp);
+        var html = await (await PairedClientAsync(app)).GetStringAsync("/borne");
+        Assert.Contains("id=\"arrive\"", html);
+        Assert.Contains("id=\"leave\"", html);
+        Assert.Contains("id=\"arrive-again\"", html);
     }
 
     [Fact]
@@ -161,10 +210,10 @@ public class KioskTests
         var id = CreateLucas(app);
         var client = await PairedClientAsync(app);
 
-        Assert.Equal("""{"keyboard":true,"departure":false}""", await client.GetStringAsync("/api/borne/config"));
-        Assert.Equal("""{"ok":false}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
+        Assert.Equal("""{"keyboard":true,"departure":true}""", await client.GetStringAsync("/api/borne/config"));
+        Assert.Equal("""{"ok":false,"pending":false}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
         await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id });
-        Assert.Equal("""{"ok":true}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
+        Assert.Equal("""{"ok":true,"pending":false}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
     }
 
     [Fact]
