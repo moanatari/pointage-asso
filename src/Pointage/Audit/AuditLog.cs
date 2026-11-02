@@ -18,6 +18,8 @@ public static class AuditActions
     public const string MemberImport = nameof(MemberImport);
     public const string HistoryExport = nameof(HistoryExport);
     public const string Purge = nameof(Purge);
+    public const string DepartureValidate = nameof(DepartureValidate);
+    public const string DepartureRefuse = nameof(DepartureRefuse);
     public const string Settings = nameof(Settings);
     public const string AccountCreate = nameof(AccountCreate);
     public const string AccountUpdate = nameof(AccountUpdate);
@@ -42,6 +44,8 @@ public static class AuditActions
         MemberImport => "Import CSV",
         HistoryExport => "Export de l'historique",
         Purge => "Purge RGPD",
+        DepartureValidate => "Validation de départ",
+        DepartureRefuse => "Refus de départ",
         Settings => "Réglages",
         AccountCreate => "Création de compte",
         AccountUpdate => "Modification de compte",

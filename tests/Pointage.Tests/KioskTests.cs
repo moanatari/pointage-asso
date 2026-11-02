@@ -161,7 +161,7 @@ public class KioskTests
         var id = CreateLucas(app);
         var client = await PairedClientAsync(app);
 
-        Assert.Equal("""{"keyboard":true,"departure":false}""", await client.GetStringAsync("/api/borne/config"));
+        Assert.Equal("""{"keyboard":true,"departure":true}""", await client.GetStringAsync("/api/borne/config"));
         Assert.Equal("""{"ok":false}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
         await client.PostAsJsonAsync("/api/borne/checkin", new { memberId = id });
         Assert.Equal("""{"ok":true}""", await (await client.PostAsJsonAsync("/api/borne/depart", new { memberId = id })).Content.ReadAsStringAsync());
