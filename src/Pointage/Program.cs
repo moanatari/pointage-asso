@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Pointage.Accounts;
 using Pointage.Audit;
 using Pointage.Data;
@@ -20,8 +21,24 @@ if (args is ["reset-admin", var user])
     return;
 }
 
+// Secours si le port choisi est bloqué : « Pointage.exe set-port <port> » (le reste des arguments, ex. --Pointage:DataDir, est ignoré ici).
+if (args is ["set-port", var port, ..])
+{
+    Environment.ExitCode = NetworkPort.SetPortCommand(OpenDb(builder.Configuration), port);
+    return;
+}
+
 // Sans effet avec « dotnet run » : n'agit que lorsque le programme est lancé comme service Windows.
 builder.Host.UseWindowsService();
+
+// Le port vient de la base (il survit aux mises à jour). Hors service (dev, tests), appsettings.json reste la source
+// et la base n'est pas lue avant Build() : les tests y injectent DataDir tardivement.
+if (WindowsServiceHelpers.IsWindowsService())
+{
+    var servicePort = new SettingsStore(OpenDb(builder.Configuration)).Get().Port;
+    builder.WebHost.UseUrls($"http://0.0.0.0:{servicePort}");
+    NetworkPort.SyncFirewall(servicePort);
+}
 
 // Base créée à la première résolution (et non pendant la configuration) : les tests y injectent leur dossier temporaire.
 builder.Services.AddSingleton(sp => OpenDb(sp.GetRequiredService<IConfiguration>()));

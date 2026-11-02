@@ -14,6 +14,7 @@ dotnet run --project src/Pointage -- --Pointage:DataDir=$env:TEMP\pointage-dev  
 - Sans `--Pointage:DataDir`, la base est créée dans `C:\ProgramData\Pointage` (celle d'une vraie installation) : toujours la rediriger en développement.
 - L'application écoute sur `http://0.0.0.0:5080`. Premier lancement : `http://localhost:5080/` ouvre l'assistant (`/Setup`).
 - Mot de passe perdu : `Pointage.exe reset-admin <identifiant>` (crée ou remet en super admin actif).
+- Port bloqué : `Pointage.exe set-port <port>` (enregistré en base, puis redémarrer le service ; le pare-feu est resynchronisé au démarrage du service).
 - Publier : `dotnet publish src/Pointage -c Release -o publish` (le `.exe` autonome win-x64 n'est produit qu'à la publication). L'installateur est compilé par la CI (`installer/Pointage.iss`).
 
 ## Architecture

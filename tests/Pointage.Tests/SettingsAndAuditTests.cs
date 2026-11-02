@@ -25,7 +25,7 @@ public class SettingsAndAuditTests
     public void Settings_SaveThenGet_RoundTrips()
     {
         var store = new SettingsStore(TestDb.Create(out _));
-        var saved = new AppSettings("Asso Soleil", 24, false, true, true);
+        var saved = new AppSettings("Asso Soleil", 24, false, true, true, 5080);
         store.Save(saved);
         store.Save(saved with { RetentionMonths = 6 });
         Assert.Equal(saved with { RetentionMonths = 6 }, store.Get());
