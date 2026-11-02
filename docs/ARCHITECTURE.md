@@ -22,14 +22,14 @@ Un seul programme, `Pointage.exe` (ASP.NET Core Razor Pages, .NET 10), installé
 ```
 
 - Les pages du responsable (connexion et assistant compris) ne répondent qu'à une requête venant de la machine elle-même : `Web/LocalOnlyMiddleware.cs` renvoie 404 aux autres. Les seules exceptions sont les préfixes `/borne`, `/api/borne` et `/static`.
-- Le programme écoute sur `0.0.0.0:5080` (`appsettings.json`, clé `Urls`). Le port 5080 est aussi écrit dans `installer/Pointage.iss` (règle de pare-feu et lien d'ouverture) et dans `Pages/Setup.cshtml.cs` (adresse affichée pour la borne) : pour le changer, modifier les trois.
+- Le programme écoute sur `0.0.0.0:{port}`, le port étant enregistré en base (réglage `port`, 5080 par défaut ; changement dans Réglages ou par `Pointage.exe set-port`). Au démarrage, la règle de pare-feu est resynchronisée. Restent en 5080 : la règle initiale et le lien d'ouverture de `installer/Pointage.iss` et l'adresse affichée par `Pages/Setup.cshtml.cs`.
 - La base est `pointage.db` dans `C:\ProgramData\Pointage` (ou dans `Pointage:DataDir` si renseigné). L'installateur verrouille ce dossier à SYSTEM et aux administrateurs.
 
 ## Rôle de chaque dossier de `src/Pointage`
 
 | Dossier | Contenu |
 |---|---|
-| `Program.cs` | Assemblage : services, authentification par cookie, pages protégées, ordre des middlewares, commande `reset-admin` |
+| `Program.cs` | Assemblage : services, authentification par cookie, pages protégées, ordre des middlewares, commandes `reset-admin` et `set-port` |
 | `Data/` | `Db` : ouverture de connexion, migrations, handlers Dapper pour les dates. `Clock` : `Now()` / `Today()` en heure locale, tronquées à la seconde |
 | `Accounts/` | `AccountStore` (comptes, rôles `SuperAdmin` / `Manager`, garde-fou « dernier super admin »), `Passwords` (PBKDF2) |
 | `Members/` | `MemberStore`, `MemberCode` (code à 6 caractères), `SearchText` (recherche sans accents ni casse), `MemberCsvImport` (import, volontairement isolé car appelé à évoluer) |

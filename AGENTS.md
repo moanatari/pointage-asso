@@ -14,6 +14,7 @@ dotnet run --project src/Pointage -- --Pointage:DataDir=$env:TEMP\pointage-dev  
 - Sans `--Pointage:DataDir`, la base est créée dans `C:\ProgramData\Pointage` (celle d'une vraie installation) : toujours la rediriger en développement.
 - L'application écoute sur `http://0.0.0.0:5080`. Premier lancement : `http://localhost:5080/` ouvre l'assistant (`/Setup`).
 - Mot de passe perdu : `Pointage.exe reset-admin <identifiant>` (crée ou remet en super admin actif).
+- Port bloqué : `Pointage.exe set-port <port>` (enregistré en base, puis redémarrer le service ; le pare-feu est resynchronisé au démarrage du service).
 - Publier : `dotnet publish src/Pointage -c Release -o publish` (le `.exe` autonome win-x64 n'est produit qu'à la publication). L'installateur est compilé par la CI (`installer/Pointage.iss`).
 
 ## Architecture
@@ -63,6 +64,7 @@ Les stores (`MemberStore`, `PresenceStore`…) sont des singletons injectés ; u
 
 - `main` = production, `dev` = intégration. Jamais de commit direct sur l'une ou l'autre.
 - Une tâche = une branche `feature/<NN>-<nom-court>` créée depuis `dev`, fusionnée par Pull Request vers `dev`.
+- Avant d'ouvrir une Pull Request : relecture de code de toute la branche (`superpowers:requesting-code-review`, diff depuis `dev`), et correction des points critiques ou importants qu'elle relève.
 - Pour sortir une version : Pull Request `dev` → `main`, puis tag `vX.Y.Z` sur `main` (`git tag v1.2.3 && git push --tags`). La CI (`.github/workflows/build.yml`) lance les tests puis publie `Pointage-Setup.exe` et son `.sha256` dans une Release.
 - Jamais de fusion de `main` vers `dev` : `main` ne reçoit que des fusions de `dev`, donc `dev` contient déjà tout ce qui est en production.
 - Numéro de version : corrections seules → `Z` (`0.1.0` → `0.1.1`) ; nouvelle fonctionnalité → `Y` (`0.1.1` → `0.2.0`) ; `X` reste à 0 tant que l'application n'est pas jugée stable.

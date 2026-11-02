@@ -18,6 +18,17 @@
     <button type="submit">Enregistrer</button>
 </form>
 
+<h2>Port réseau</h2>
+<form method="post" asp-page="/Admin/Settings" asp-page-handler="Port" class="stack">
+    <p>Réservé à la personne qui installe. Après un changement, chaque borne doit être reconfigurée avec la nouvelle adresse.</p>
+    @if (Model.PortMessage is not null)
+    {
+        <p class="@(Model.PortFailed ? "error" : null)">@Model.PortMessage</p>
+    }
+    <label>Port <input asp-for="Port" type="number" min="1024" max="65535" required></label>
+    <button type="submit">Changer le port</button>
+</form>
+
 <h2>Administration</h2>
 <ul class="plain">
     <li><a href="/Admin/Accounts">Comptes</a></li>

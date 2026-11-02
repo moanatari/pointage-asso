@@ -33,6 +33,18 @@ Sur le poste du responsable, ouvrir une console **en administrateur** et lancer 
 
 Le programme demande un nouveau mot de passe (deux fois). Si l'identifiant n'existe pas, il est créé ; s'il existe, il redevient super admin actif.
 
+### Port bloqué ou à changer
+
+Dans une console **en administrateur** :
+
+```
+"C:\Program Files\Pointage\Pointage.exe" set-port <port>
+sc stop Pointage
+sc start Pointage
+```
+
+Le port (entre 1024 et 65535) est enregistré en base ; la règle du pare-feu est mise à jour au démarrage du service.
+
 ## Démarrage en développement (5 minutes)
 
 Prérequis : le [SDK .NET 10](https://dotnet.microsoft.com/download) (`dotnet --version` doit afficher 10.x).

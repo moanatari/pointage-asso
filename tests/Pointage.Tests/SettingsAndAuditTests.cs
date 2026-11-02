@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Pointage.Accounts;
@@ -25,7 +27,7 @@ public class SettingsAndAuditTests
     public void Settings_SaveThenGet_RoundTrips()
     {
         var store = new SettingsStore(TestDb.Create(out _));
-        var saved = new AppSettings("Asso Soleil", 24, false, true, true);
+        var saved = new AppSettings("Asso Soleil", 24, false, true, true, 5080);
         store.Save(saved);
         store.Save(saved with { RetentionMonths = 6 });
         Assert.Equal(saved with { RetentionMonths = 6 }, store.Get());
@@ -71,6 +73,108 @@ public class SettingsAndAuditTests
 
         Assert.False(settings.Get().DepartureValidation);
         Assert.Empty(presences.PendingDepartures());
+    }
+
+    static int FreePort()
+    {
+        var l = new TcpListener(IPAddress.Loopback, 0);
+        l.Start();
+        var port = ((IPEndPoint)l.LocalEndpoint).Port;
+        l.Stop();
+        return port;
+    }
+
+    static async Task<string> PostPortAsync(HttpClient client, string port) =>
+        WebUtility.HtmlDecode(await (await AppFactory.PostFormAsync(client, "/Admin/Settings", "/Admin/Settings?handler=Port",
+            new() { ["Port"] = port })).Content.ReadAsStringAsync());
+
+    [Fact]
+    public async Task PortForm_Valid_SavesAuditsAndAsksManualRestart()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+        var port = FreePort();
+
+        var html = await PostPortAsync(client, port.ToString());
+
+        Assert.DoesNotContain("field is required.</li>", html);
+        Assert.Contains($"Port enregistré. Redémarrez l'application pour l'appliquer, puis ouvrez http://localhost:{port}/", html);
+        Assert.Equal(port, app.Services.GetRequiredService<SettingsStore>().Get().Port);
+        Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(5), e => e.Details == $"Port 5080 → {port}");
+    }
+
+    [Theory]
+    [InlineData("80")]
+    [InlineData("70000")]
+    [InlineData("")]
+    public async Task PortForm_OutOfRange_ShowsErrorAndKeepsPort(string value)
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+
+        var html = await PostPortAsync(client, value);
+
+        Assert.Contains("Le port doit être un nombre entre 1024 et 65535.", html);
+        Assert.DoesNotContain("field is required.</li>", html);
+        Assert.Equal(5080, app.Services.GetRequiredService<SettingsStore>().Get().Port);
+    }
+
+    [Fact]
+    public async Task PortForm_Occupied_ShowsError()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+        var busy = new TcpListener(IPAddress.Any, 0);
+        busy.Start();
+        try
+        {
+            var port = ((IPEndPoint)busy.LocalEndpoint).Port;
+            var html = await PostPortAsync(client, port.ToString());
+            Assert.Contains($"Le port {port} est déjà utilisé sur ce poste.", html);
+            Assert.Equal(5080, app.Services.GetRequiredService<SettingsStore>().Get().Port);
+        }
+        finally { busy.Stop(); }
+    }
+
+    [Fact]
+    public async Task PortForm_Same_NoChange()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+
+        var html = await PostPortAsync(client, "5080");
+
+        Assert.Contains("Le port est déjà 5080.", html);
+        Assert.DoesNotContain(app.Services.GetRequiredService<AuditLog>().Recent(5), e => e.Action == AuditActions.Settings);
+    }
+
+    [Fact]
+    public async Task PortForm_Manager_Forbidden()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var token = AppFactory.AntiforgeryToken(await client.GetStringAsync("/"));
+
+        var response = await client.PostAsync("/Admin/Settings?handler=Port", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["Port"] = "8081", ["__RequestVerificationToken"] = token,
+        }));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(5080, app.Services.GetRequiredService<SettingsStore>().Get().Port);
+    }
+
+    [Fact]
+    public async Task LocalOnly_LocalhostOnOtherPort_Allowed()
+    {
+        using var app = new AppFactory();
+        var client = app.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/Login");
+        request.Headers.Host = "localhost:8081";
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
