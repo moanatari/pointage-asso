@@ -68,6 +68,7 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""P
 
 Filename: "{sys}\sc.exe"; Parameters: "start Pointage"; Flags: runhidden; StatusMsg: "Démarrage du service Pointage..."
 ; Proposé seulement en installation normale (pas en mise à jour silencieuse).
+; ponytail: le lien reste en 5080 ; après un changement de port dans les réglages, l'installateur n'en sait rien. Piste : lire le port en base.
 Filename: "http://localhost:5080/"; Description: "Ouvrir Pointage"; Flags: shellexec postinstall skipifsilent
 
 [UninstallRun]

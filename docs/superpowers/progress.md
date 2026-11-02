@@ -66,7 +66,7 @@ Les 14 tâches sont terminées et fusionnées dans `dev` (PR #1 à #14). La rele
 - Refuser les dates futures dans « Ajouter une présence ».
 - Renouveler le cookie de la borne à chaque visite (Chrome plafonne à 400 jours).
 - `ValidateMany` : se limiter au jour courant.
-- Le port 5080 est écrit à trois endroits et `appsettings.json` est écrasé à chaque mise à jour.
+- `appsettings.json` est écrasé à chaque mise à jour.
 - Fiche membre : statistiques sur une période au choix.
 - Afficher sur la page Réglages le nombre de membres à purger.
 - Renormaliser les fins de ligne (`git add --renormalize .`) dans un commit séparé.
