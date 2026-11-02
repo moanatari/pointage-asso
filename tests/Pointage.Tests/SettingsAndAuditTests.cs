@@ -97,6 +97,7 @@ public class SettingsAndAuditTests
 
         var html = await PostPortAsync(client, port.ToString());
 
+        Assert.DoesNotContain("field is required.</li>", html);
         Assert.Contains($"Port enregistré. Redémarrez l'application pour l'appliquer, puis ouvrez http://localhost:{port}/", html);
         Assert.Equal(port, app.Services.GetRequiredService<SettingsStore>().Get().Port);
         Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(5), e => e.Details == $"Port 5080 → {port}");
@@ -114,6 +115,7 @@ public class SettingsAndAuditTests
         var html = await PostPortAsync(client, value);
 
         Assert.Contains("Le port doit être un nombre entre 1024 et 65535.", html);
+        Assert.DoesNotContain("field is required.</li>", html);
         Assert.Equal(5080, app.Services.GetRequiredService<SettingsStore>().Get().Port);
     }
 

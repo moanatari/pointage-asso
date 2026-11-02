@@ -36,6 +36,7 @@ builder.Host.UseWindowsService();
 if (WindowsServiceHelpers.IsWindowsService())
 {
     var servicePort = new SettingsStore(OpenDb(builder.Configuration)).Get().Port;
+    if (!NetworkPort.IsValid(servicePort)) servicePort = NetworkPort.Default;
     builder.WebHost.UseUrls($"http://0.0.0.0:{servicePort}");
     NetworkPort.SyncFirewall(servicePort);
 }

@@ -38,7 +38,7 @@ public static class NetworkPort
     static void Netsh(string args)
     {
         using var p = Process.Start(new ProcessStartInfo("netsh", args) { CreateNoWindow = true, UseShellExecute = false });
-        p?.WaitForExit();
+        p?.WaitForExit(10000);
     }
 
     // ponytail: relance en ~60 s (reprise sur échec du service, restart/60000) ; piste : sc failureflag + arrêt propre si le délai gêne.

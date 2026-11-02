@@ -29,7 +29,7 @@ Un seul programme, `Pointage.exe` (ASP.NET Core Razor Pages, .NET 10), installé
 
 | Dossier | Contenu |
 |---|---|
-| `Program.cs` | Assemblage : services, authentification par cookie, pages protégées, ordre des middlewares, commande `reset-admin` |
+| `Program.cs` | Assemblage : services, authentification par cookie, pages protégées, ordre des middlewares, commandes `reset-admin` et `set-port` |
 | `Data/` | `Db` : ouverture de connexion, migrations, handlers Dapper pour les dates. `Clock` : `Now()` / `Today()` en heure locale, tronquées à la seconde |
 | `Accounts/` | `AccountStore` (comptes, rôles `SuperAdmin` / `Manager`, garde-fou « dernier super admin »), `Passwords` (PBKDF2) |
 | `Members/` | `MemberStore`, `MemberCode` (code à 6 caractères), `SearchText` (recherche sans accents ni casse), `MemberCsvImport` (import, volontairement isolé car appelé à évoluer) |

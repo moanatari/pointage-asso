@@ -32,11 +32,12 @@ public class SettingsModel(SettingsStore settings, PresenceStore presences, Audi
     {
         // Pas de ModelState.IsValid : il couvre aussi les champs de l'autre formulaire, absents de cette requête.
         var asked = Port;
+        ModelState.Clear(); // sinon le champ OrganizationName, absent de ce formulaire, produit une erreur anglaise
         OnGet();
         if (asked is not int p || !NetworkPort.IsValid(p))
             return PortResult("Le port doit être un nombre entre 1024 et 65535.", true);
         var before = settings.Get();
-        if (p == before.Port) return PortResult($"Le port est déjà {p}.", true);
+        if (p == before.Port) return PortResult($"Le port est déjà {p}.", false);
         if (!NetworkPort.IsFree(p)) return PortResult($"Le port {p} est déjà utilisé sur ce poste.", true);
 
         settings.Save(before with { Port = p });
