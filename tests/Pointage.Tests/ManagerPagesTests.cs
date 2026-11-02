@@ -97,6 +97,45 @@ public class ManagerPagesTests
         Assert.Contains("(à valider)", Section(html, "Présents aujourd'hui (1)"));
     }
 
+    [Fact]
+    public async Task Home_PendingNameLinksToDetails()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var lucas = CreateLucas(app);
+        app.Services.GetRequiredService<PresenceStore>().CheckIn(lucas.Id);
+
+        var html = await Text(await client.GetAsync("/"));
+
+        Assert.Contains($"<a href=\"/Members/Details/{lucas.Id}\">Lucas Dupont</a>", Section(html, "À valider (1)"));
+    }
+
+    [Fact]
+    public async Task Purge_MemberNameLinksToDetails()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.SuperAdmin);
+        var old = CreateLucas(app);
+        var admin = app.Services.GetRequiredService<AccountStore>().List()[0].Id;
+        app.Services.GetRequiredService<PresenceStore>().AddManual(old.Id, new DateTime(2020, 1, 1, 9, 0, 0), admin);
+
+        var html = await Text(await client.GetAsync("/Admin/Purge"));
+
+        Assert.Contains($"<a href=\"/Members/Details/{old.Id}\">Lucas Dupont</a>", html);
+    }
+
+    [Fact]
+    public async Task Home_PendingDepartureNameLinksToDetails()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var (_, memberId) = PendingDeparture(app);
+
+        var html = await Text(await client.GetAsync("/"));
+
+        Assert.Contains($"<a href=\"/Members/Details/{memberId}\">Lucas Dupont</a>", Section(html, "Départs à valider (1)"));
+    }
+
     private static (long Id, long MemberId) PendingDeparture(AppFactory app)
     {
         var presences = app.Services.GetRequiredService<PresenceStore>();

@@ -137,7 +137,24 @@ public class HistoryTests
 
         Assert.Contains("3 présences · 2 membres différents", html);
         // Ligne de détail complète : date, membre, arrivée 09:00, pas de départ, statut validé (saisie manuelle).
-        Assert.Matches($"<td>{Regex.Escape(monday)}</td>\\s*<td>Lucas Martin</td>\\s*<td>09:00</td>\\s*<td>—</td>\\s*<td>validé</td>", html);
+        Assert.Matches($"<td>{Regex.Escape(monday)}</td>\\s*<td><a href=\"/Members/Details/{martin.Id}\">Lucas Martin</a></td>\\s*<td>09:00</td>\\s*<td>—</td>\\s*<td>validé</td>", html);
         Assert.Contains($"href=\"/Presences/Edit/{id}\"", html);
+    }
+
+    [Fact]
+    public async Task History_MemberNamesLinkToDetails()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        var martin = CreateMember(app, "Martin", "Lucas");
+        var bernard = CreateMember(app, "Bernard", "Anne");
+        SeedLastWeek(app, martin, bernard);
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/History?preset=lastweek"));
+
+        // Tableau par membre (Martin en deux venues) et tableau détaillé : chaque nom renvoie à la fiche.
+        Assert.Contains($"<a href=\"/Members/Details/{martin.Id}\">Lucas Martin</a>", html);
+        Assert.Contains($"<a href=\"/Members/Details/{bernard.Id}\">Anne Bernard</a>", html);
+        Assert.Equal(3, Regex.Matches(html, $"href=\"/Members/Details/{martin.Id}\"").Count);
     }
 }

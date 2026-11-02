@@ -22,7 +22,7 @@ else
         @foreach (var (m, last) in Model.Candidates)
         {
             <tr>
-                <td>@m.FullName</td>
+                <td><a href="/Members/Details/@m.Id">@m.FullName</a></td>
                 <td>@(last is { } d ? d.ToString("dd/MM/yyyy") : "jamais venu")</td>
             </tr>
         }
