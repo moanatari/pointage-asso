@@ -72,7 +72,7 @@ Une ligne de la table `presences` = un passage (arrivée, départ facultatif). S
 2. Sur le poste, le super admin ouvre **Bornes** et clique sur « Lier une borne » : `KioskPairing.NewPairingCode` produit un code de 6 chiffres, valable 10 minutes, à usage unique, gardé en mémoire (un redémarrage l'annule). Cinq erreurs de saisie l'annulent.
 3. La borne envoie le code à `/api/borne/pair`. Le serveur répond par un jeton aléatoire, posé dans le cookie `pointage_kiosk` (valable 10 ans, `HttpOnly`). Seul le **hachage SHA-256** du jeton est stocké (table `kiosks`).
 4. Toutes les autres routes `/api/borne/*` vérifient le jeton (`KioskPairing.IsValid`) et répondent 401 sinon, par exemple pour une borne révoquée. Le super admin peut révoquer chaque borne dans **Bornes**.
-5. La borne ne reçoit que `KioskMember` : id, « Prénom N. », code et `HasPresenceToday`.
+5. La borne ne reçoit que `KioskMember` : id, « Prénom N. », code et `IsPresent` (JSON `isPresent`).
 
 Si le cookie est perdu, il suffit de relier la borne (voir `docs/borne.md`).
 
