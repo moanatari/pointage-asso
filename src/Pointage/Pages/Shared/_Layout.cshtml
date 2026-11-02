@@ -19,6 +19,7 @@
                 <a href="/Admin/Settings">Réglages</a>
                 <a href="/Admin/Kiosks">Bornes</a>
             }
+            <a href="/Aide">Aide</a>
             @* asp-page et non action : avec action explicite, le tag helper n'ajoute pas le jeton antiforgery (400). *@
             <form method="post" asp-page="/Logout"><button type="submit">Déconnexion</button></form>
         </nav>

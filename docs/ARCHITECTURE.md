@@ -40,7 +40,7 @@ Un seul programme, `Pointage.exe` (ASP.NET Core Razor Pages, .NET 10), installé
 | `Settings/` | `SettingsStore` : nom de la structure, durée de conservation, clavier et bouton départ de la borne |
 | `Updates/` | `UpdateService` (API GitHub, téléchargement vérifié) et `UpdateCheckWorker` (au démarrage puis toutes les 24 h) |
 | `Web/` | `LocalOnlyMiddleware`, `ResetAdmin`, extensions sur l'utilisateur connecté |
-| `Pages/` | Razor Pages : accueil, membres, présences, historique, connexion, assistant `Setup`. `Admin/` : réglages, comptes, bornes, purge, journal, mises à jour (super admin). `Borne/` : l'écran de la borne |
+| `Pages/` | Razor Pages : accueil, membres, présences, historique, connexion, assistant `Setup`. `Admin/` : réglages, comptes, bornes, purge, journal, mises à jour (super admin). `Borne/` : l'écran de la borne. `Aide/` : pages d'aide statiques, accessibles sans connexion mais locales uniquement |
 | `wwwroot/static/` | `site.css`, `kiosk.css`, `kiosk.js` (le seul JavaScript : recherche, clavier à l'écran, retour à l'accueil après 5 s ou 30 s d'inactivité) |
 
 Les stores sont des singletons qui ouvrent une connexion SQLite par opération (`db.Open()`). Une page de `Pages/` appelle un store puis `AuditLog`. Les tests sont dans `tests/Pointage.Tests` : `AppFactory` démarre l'application complète sur une base temporaire et simule l'adresse du client (poste ou réseau).
@@ -74,7 +74,7 @@ Une ligne de la table `presences` = un passage (arrivée, départ facultatif). S
 4. Toutes les autres routes `/api/borne/*` vérifient le jeton (`KioskPairing.IsValid`) et répondent 401 sinon, par exemple pour une borne révoquée. Le super admin peut révoquer chaque borne dans **Bornes**.
 5. La borne ne reçoit que `KioskMember` : id, « Prénom N. », code et `IsPresent` (JSON `isPresent`).
 
-Si le cookie est perdu, il suffit de relier la borne (voir `docs/borne.md`).
+Si le cookie est perdu, il suffit de relier la borne (voir l'aide intégrée, page Bornes).
 
 ## Migrations
 

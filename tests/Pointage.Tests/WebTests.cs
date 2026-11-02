@@ -166,4 +166,57 @@ public class WebTests
         var response = await client.GetAsync("/");
         Assert.Equal("/Login", response.RequestMessage!.RequestUri!.AbsolutePath);
     }
+
+    static readonly string[] AidePaths =
+        ["/Aide", "/Aide/PremiersPas", "/Aide/Quotidien", "/Aide/Membres", "/Aide/Bornes", "/Aide/Historique", "/Aide/Administration", "/Aide/Depannage"];
+
+    [Fact]
+    public async Task Aide_AllPagesAnonymousLocal_Return200()
+    {
+        using var app = new AppFactory();
+        app.Services.GetRequiredService<AccountStore>().Create("admin", AppFactory.Password, Role.SuperAdmin);
+        var client = app.CreateClient();
+        foreach (var path in AidePaths)
+        {
+            var response = await client.GetAsync(path);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(path, response.RequestMessage!.RequestUri!.AbsolutePath);
+        }
+    }
+
+    [Fact]
+    public async Task Aide_FromLan_Returns404()
+    {
+        using var app = new AppFactory("192.168.1.20");
+        app.Services.GetRequiredService<AccountStore>().Create("admin", AppFactory.Password, Role.SuperAdmin);
+        var client = app.CreateClient();
+        foreach (var path in AidePaths)
+            Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(path)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Layout_Manager_HasAideLink()
+    {
+        using var app = new AppFactory();
+        var client = await app.LoggedInClientAsync(Role.Manager);
+        Assert.Contains("href=\"/Aide\"", await client.GetStringAsync("/"));
+    }
+
+    [Fact]
+    public async Task Login_HasAideLink()
+    {
+        using var app = new AppFactory();
+        app.Services.GetRequiredService<AccountStore>().Create("admin", AppFactory.Password, Role.SuperAdmin);
+        Assert.Contains("href=\"/Aide\"", await app.CreateClient().GetStringAsync("/Login"));
+    }
+
+    [Fact]
+    public async Task Aide_Depannage_MentionsCommands()
+    {
+        using var app = new AppFactory();
+        app.Services.GetRequiredService<AccountStore>().Create("admin", AppFactory.Password, Role.SuperAdmin);
+        var html = await app.CreateClient().GetStringAsync("/Aide/Depannage");
+        Assert.Contains("reset-admin", html);
+        Assert.Contains("set-port", html);
+    }
 }
