@@ -100,7 +100,10 @@ app.Services.GetRequiredService<Db>();
 
 // En premier : aucune page du responsable ne doit répondre à une autre machine, même pas par une erreur.
 app.UseMiddleware<LocalOnlyMiddleware>();
-app.UseStaticFiles();
+// .ps1 n'a pas de type MIME connu : sans cela, le fichier de la borne serait refusé (404).
+var staticTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+staticTypes.Mappings[".ps1"] = "application/octet-stream";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = staticTypes });
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -44,7 +44,7 @@ public class SetupModel(AccountStore accounts, SettingsStore settings) : PageMod
             KioskKeyboard = KioskKeyboard,
         });
         await HttpContext.SignInAsync(accounts.Get(id)!);
-        KioskUrl = $"http://{Environment.MachineName}:5080/borne";
+        KioskUrl = Pointage.Kiosk.KioskAddresses.Urls(Request.Host.Port)[0];
         return Page();
     }
 }
