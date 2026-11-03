@@ -41,7 +41,7 @@ public class WebTests
             ["KioskKeyboard"] = "false",
             ["__RequestVerificationToken"] = AppFactory.AntiforgeryToken(form),
         }));
-        Assert.Contains($"http://{Environment.MachineName}/borne", await response.Content.ReadAsStringAsync());
+        Assert.Contains(Pointage.Kiosk.KioskAddresses.Urls(null)[0], await response.Content.ReadAsStringAsync());
         Assert.True(app.Services.GetRequiredService<AccountStore>().AnySuperAdmin());
         var settings = app.Services.GetRequiredService<Pointage.Settings.SettingsStore>().Get();
         Assert.Equal(("Club des Lilas", 24, false), (settings.OrganizationName, settings.RetentionMonths, settings.KioskKeyboard));

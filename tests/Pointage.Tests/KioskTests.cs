@@ -296,10 +296,12 @@ public class KioskTests
         Assert.Equal(expected, KioskAddresses.IsPrivate(IPAddress.Parse(ip)));
 
     [Fact]
-    public void Urls_FirstIsMachineName()
+    public void Urls_LastIsMachineName()
     {
-        Assert.Equal($"http://{Environment.MachineName}:5080/borne", KioskAddresses.Urls(5080)[0]);
-        Assert.Equal($"http://{Environment.MachineName}/borne", KioskAddresses.Urls(null)[0]);
+        Assert.Equal($"http://{Environment.MachineName}:5080/borne", KioskAddresses.Urls(5080)[^1]);
+        Assert.Equal($"http://{Environment.MachineName}/borne", KioskAddresses.Urls(null)[^1]);
+        // Les IP d'abord : un iPhone ne résout pas le nom d'un PC Windows.
+        Assert.All(KioskAddresses.Urls(5080).SkipLast(1), u => Assert.DoesNotContain(Environment.MachineName, u));
     }
 
     [Fact]
@@ -310,6 +312,7 @@ public class KioskTests
         var html = await client.GetStringAsync("/Admin/Kiosks");
         Assert.Contains("Adresse à saisir sur la borne", html);
         Assert.Contains($"{Environment.MachineName}/borne", html);
+        Assert.Contains("(depuis un PC Windows uniquement)", html);
     }
 
     [Fact]
