@@ -14,13 +14,17 @@ public static class KioskAddresses
         var urls = new List<string>();
         try
         {
-            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-                foreach (var u in nic.GetIPProperties().UnicastAddresses)
+            // Cartes avec passerelle d'abord : celle de la box. Hyper-V, WSL ou Docker ont aussi des IP privées
+            // mais pas de passerelle, et la première adresse est celle affichée par l'assistant et la liaison.
+            var nics = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up
+                    && n.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+                .Select(n => n.GetIPProperties())
+                .OrderByDescending(ip => ip.GatewayAddresses.Count > 0);
+            foreach (var ip in nics)
+                foreach (var u in ip.UnicastAddresses)
                     if (u.Address.AddressFamily == AddressFamily.InterNetwork && IsPrivate(u.Address))
                         urls.Add($"http://{u.Address}{suffix}/borne");
-            }
         }
         catch (NetworkInformationException)
         {
@@ -43,8 +47,12 @@ public static class KioskAddresses
         {
             // NetworkListManager (COM de Windows) : ni paquet NuGet, ni PowerShell à lancer.
             dynamic nlm = Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("DCB00C01-570F-4A9B-8D69-199FDBA5723B"))!)!;
+            // ponytail: seuls les réseaux avec accès Internet, pour ne pas alerter sur Hyper-V ou WSL (Public, sans Internet) ;
+            // une box sans Internet n'est donc pas signalée. Piste : relier réseau et carte (INetworkConnection.GetAdapterId,
+            // non disponible par IDispatch, donc interface COM typée).
             foreach (dynamic n in nlm.GetNetworks(1)) // 1 = NLM_ENUM_NETWORK_CONNECTED
-                if ((int)n.GetCategory() == 0) names.Add((string)n.GetName()); // 0 = NLM_NETWORK_CATEGORY_PUBLIC
+                if ((int)n.GetCategory() == 0 && (bool)n.IsConnectedToInternet) // 0 = NLM_NETWORK_CATEGORY_PUBLIC
+                    names.Add((string)n.GetName());
         }
         catch
         {

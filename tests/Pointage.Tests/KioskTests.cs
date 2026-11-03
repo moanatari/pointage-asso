@@ -305,6 +305,9 @@ public class KioskTests
     }
 
     [Fact]
+    public void PublicNetworks_NeverThrows() => Assert.NotNull(KioskAddresses.PublicNetworks());
+
+    [Fact]
     public async Task KiosksPage_ShowsBorneUrl()
     {
         using var app = new AppFactory();
