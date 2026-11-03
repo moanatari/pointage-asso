@@ -4,9 +4,9 @@ using Pointage.Data;
 
 namespace Pointage.Settings;
 
-public sealed record AppSettings(string OrganizationName, int RetentionMonths, bool KioskKeyboard, bool KioskDeparture)
+public sealed record AppSettings(string OrganizationName, int RetentionMonths, bool KioskKeyboard, bool KioskDeparture, bool DepartureValidation, int Port)
 {
-    public static readonly AppSettings Default = new("", 12, true, false);
+    public static readonly AppSettings Default = new("", 12, true, true, false, NetworkPort.Default);
 }
 
 public sealed class SettingsStore(Db db)
@@ -20,7 +20,9 @@ public sealed class SettingsStore(Db db)
             v.GetValueOrDefault("organization_name", d.OrganizationName),
             v.TryGetValue("retention_months", out var m) && int.TryParse(m, CultureInfo.InvariantCulture, out var months) ? months : d.RetentionMonths,
             v.TryGetValue("kiosk_keyboard", out var k) ? k == "1" : d.KioskKeyboard,
-            v.TryGetValue("kiosk_departure", out var dep) ? dep == "1" : d.KioskDeparture);
+            v.TryGetValue("kiosk_departure", out var dep) ? dep == "1" : d.KioskDeparture,
+            v.TryGetValue("departure_validation", out var dv) ? dv == "1" : d.DepartureValidation,
+            v.TryGetValue("port", out var p) && int.TryParse(p, CultureInfo.InvariantCulture, out var port) ? port : d.Port);
     }
 
     public void Save(AppSettings s)
@@ -33,6 +35,8 @@ public sealed class SettingsStore(Db db)
             ("retention_months", s.RetentionMonths.ToString(CultureInfo.InvariantCulture)),
             ("kiosk_keyboard", s.KioskKeyboard ? "1" : "0"),
             ("kiosk_departure", s.KioskDeparture ? "1" : "0"),
+            ("departure_validation", s.DepartureValidation ? "1" : "0"),
+            ("port", s.Port.ToString(CultureInfo.InvariantCulture)),
         })
             c.Execute("INSERT INTO settings(key, value) VALUES(@key, @value) ON CONFLICT(key) DO UPDATE SET value=excluded.value", new { key, value }, tx);
         tx.Commit();

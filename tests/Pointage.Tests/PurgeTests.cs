@@ -153,7 +153,7 @@ public class PurgeTests
             ["OrganizationName"] = "Judo Club", ["RetentionMonths"] = "24", ["KioskKeyboard"] = "false", ["KioskDeparture"] = "true",
         })).EnsureSuccessStatusCode();
 
-        Assert.Equal(new AppSettings("Judo Club", 24, false, true), app.Services.GetRequiredService<SettingsStore>().Get());
+        Assert.Equal(new AppSettings("Judo Club", 24, false, true, false, 5080), app.Services.GetRequiredService<SettingsStore>().Get());
         Assert.Contains(app.Services.GetRequiredService<AuditLog>().Recent(10), e => e.Action == AuditActions.Settings);
         // « Réglages » figure déjà dans le menu : on vérifie un libellé absent de la mise en page, et que le code brut n'apparaît pas.
         app.Services.GetRequiredService<AuditLog>().Write(null, AuditActions.Purge);

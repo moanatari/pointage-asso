@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Pointage.Accounts;
 using Pointage.Audit;
 using Pointage.Data;
@@ -20,8 +21,25 @@ if (args is ["reset-admin", var user])
     return;
 }
 
+// Secours si le port choisi est bloqué : « Pointage.exe set-port <port> » (le reste des arguments, ex. --Pointage:DataDir, est ignoré ici).
+if (args is ["set-port", var port, ..])
+{
+    Environment.ExitCode = NetworkPort.SetPortCommand(OpenDb(builder.Configuration), port);
+    return;
+}
+
 // Sans effet avec « dotnet run » : n'agit que lorsque le programme est lancé comme service Windows.
 builder.Host.UseWindowsService();
+
+// Le port vient de la base (il survit aux mises à jour). Hors service (dev, tests), appsettings.json reste la source
+// et la base n'est pas lue avant Build() : les tests y injectent DataDir tardivement.
+if (WindowsServiceHelpers.IsWindowsService())
+{
+    var servicePort = new SettingsStore(OpenDb(builder.Configuration)).Get().Port;
+    if (!NetworkPort.IsValid(servicePort)) servicePort = NetworkPort.Default;
+    builder.WebHost.UseUrls($"http://0.0.0.0:{servicePort}");
+    NetworkPort.SyncFirewall(servicePort);
+}
 
 // Base créée à la première résolution (et non pendant la configuration) : les tests y injectent leur dossier temporaire.
 builder.Services.AddSingleton(sp => OpenDb(sp.GetRequiredService<IConfiguration>()));
@@ -47,6 +65,8 @@ builder.Services.AddRazorPages(o =>
     o.Conventions.AllowAnonymousToPage("/Login");
     o.Conventions.AllowAnonymousToPage("/Setup");
     o.Conventions.AllowAnonymousToFolder("/Borne");
+    // Aide accessible sans connexion (utile quand on a perdu son mot de passe) ; reste locale grâce à LocalOnlyMiddleware.
+    o.Conventions.AllowAnonymousToFolder("/Aide");
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
@@ -82,7 +102,10 @@ app.Services.GetRequiredService<Db>();
 
 // En premier : aucune page du responsable ne doit répondre à une autre machine, même pas par une erreur.
 app.UseMiddleware<LocalOnlyMiddleware>();
-app.UseStaticFiles();
+// .ps1 n'a pas de type MIME connu : sans cela, le fichier de la borne serait refusé (404).
+var staticTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+staticTypes.Mappings[".ps1"] = "application/octet-stream";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = staticTypes });
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

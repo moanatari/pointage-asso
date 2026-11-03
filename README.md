@@ -17,7 +17,7 @@ Sur le poste du responsable (Windows, toujours allumé quand les enfants arriven
 2. Lancer le fichier. Windows affiche « Windows a protégé votre ordinateur » (SmartScreen), car le programme n'est pas signé : cliquer sur **Informations complémentaires**, puis **Exécuter quand même**.
 3. Suivre l'assistant. Il installe le programme, crée le service Windows `Pointage` (démarrage automatique) et ouvre le port 5080 du pare-feu pour les réseaux privé et domaine.
 4. Le navigateur s'ouvre sur l'assistant de premier lancement : nom de la structure, identifiant et mot de passe du super admin (8 caractères minimum), durée de conservation, clavier de la borne. La dernière page affiche l'adresse à saisir sur la borne.
-5. **Lier la borne** : voir `docs/borne.md`.
+5. **Lier la borne** : voir l'aide intégrée (menu **Aide** > Bornes, `http://localhost:<port>/Aide/Bornes`).
 
 Les pages du responsable ne répondent que sur le poste lui-même (`http://localhost:5080/`). Depuis le réseau, seule la borne répond, et seulement si elle a été liée.
 
@@ -32,6 +32,18 @@ Sur le poste du responsable, ouvrir une console **en administrateur** et lancer 
 ```
 
 Le programme demande un nouveau mot de passe (deux fois). Si l'identifiant n'existe pas, il est créé ; s'il existe, il redevient super admin actif.
+
+### Port bloqué ou à changer
+
+Dans une console **en administrateur** :
+
+```
+"C:\Program Files\Pointage\Pointage.exe" set-port <port>
+sc stop Pointage
+sc start Pointage
+```
+
+Le port (entre 1024 et 65535) est enregistré en base ; la règle du pare-feu est mise à jour au démarrage du service.
 
 ## Démarrage en développement (5 minutes)
 
@@ -75,6 +87,6 @@ Prévoir une première version de test (tag `v0.1.0`) installée sur un PC de te
 ## Documentation
 
 - `docs/ARCHITECTURE.md` : les deux postes, les dossiers du code, cycle de vie d'une présence, migrations, mises à jour, pistes pour plus tard.
-- `docs/borne.md` : préparer le PC de la borne.
+- Aide intégrée à l'application (menu **Aide**, accessible aussi depuis la page de connexion) : tutoriel, mode kiosque de la borne et dépannage. `docs/borne.md` y renvoie.
 - `docs/rgpd/` : modèles de registre des traitements et de notice d'information des familles.
 - `docs/superpowers/specs/` : le document de conception d'origine.

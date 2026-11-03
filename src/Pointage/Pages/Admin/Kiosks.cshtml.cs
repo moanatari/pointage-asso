@@ -13,10 +13,16 @@ public class KiosksModel(KioskPairing pairing, AuditLog audit, TimeProvider time
     [BindProperty] public string KioskName { get; set; } = "";
     public string? Code { get; private set; }
     public DateTime CodeExpiresAt { get; private set; }
+    public IReadOnlyList<string> Urls { get; private set; } = [];
     public string? Error { get; private set; }
     public IReadOnlyList<Pointage.Kiosk.Kiosk> Kiosks { get; private set; } = [];
 
-    public void OnGet() => Kiosks = pairing.List();
+    public void OnGet()
+    {
+        Kiosks = pairing.List();
+        // Le responsable consulte la page via localhost:<port> : c'est le port à donner à la borne.
+        Urls = KioskAddresses.Urls(Request.Host.Port);
+    }
 
     public IActionResult OnPostPair()
     {

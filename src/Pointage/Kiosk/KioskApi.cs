@@ -12,8 +12,9 @@ public static class KioskApi
 
     public sealed record PairRequest(string? Code);
     public sealed record MemberRequest(long MemberId);
+    public sealed record CheckInRequest(long MemberId, bool Force);
     // Type dédié plutôt que Member : aucun champ supplémentaire ne peut fuiter par mégarde.
-    public sealed record KioskMember(long Id, string Label, string Code, bool HasPresenceToday);
+    public sealed record KioskMember(long Id, string Label, string Code, bool IsPresent);
 
     public static void MapKioskApi(this WebApplication app)
     {
@@ -37,16 +38,22 @@ public static class KioskApi
         api.MapGet("/search", (string? q, MemberStore members, PresenceStore presences) =>
             (q?.Trim().Length ?? 0) < 2
                 ? []
-                : members.Search(q!, 8).Select(m => new KioskMember(m.Id, m.KioskLabel, m.Code, presences.HasPresenceToday(m.Id))).ToList());
+                : members.Search(q!, 8).Select(m => new KioskMember(m.Id, m.KioskLabel, m.Code, presences.IsPresent(m.Id))).ToList());
 
         // Un id inconnu ou anonymisé est refusé : la borne ne doit pas pouvoir créer de présence pour n'importe quel id.
-        api.MapPost("/checkin", (MemberRequest req, MemberStore members, PresenceStore presences) =>
+        api.MapPost("/checkin", (CheckInRequest req, MemberStore members, PresenceStore presences) =>
             IsCheckable(members, req.MemberId)
-                ? Results.Ok(new { result = presences.CheckIn(req.MemberId) == CheckInResult.Created ? "created" : "already" })
+                ? Results.Ok(new { result = presences.CheckIn(req.MemberId, req.Force) == CheckInResult.Created ? "created" : "already" })
                 : Results.NotFound());
 
-        api.MapPost("/depart", (MemberRequest req, MemberStore members, PresenceStore presences) =>
-            IsCheckable(members, req.MemberId) ? Results.Ok(new { ok = presences.Depart(req.MemberId) }) : Results.NotFound());
+        api.MapPost("/depart", (MemberRequest req, MemberStore members, PresenceStore presences, SettingsStore settings) =>
+        {
+            if (!IsCheckable(members, req.MemberId)) return Results.NotFound();
+            var s = settings.Get();
+            // Une borne chargée avant le changement de réglage ne doit plus pouvoir pointer un départ.
+            if (!s.KioskDeparture) return Results.Ok(new { ok = false, pending = false });
+            return Results.Ok(new { ok = presences.Depart(req.MemberId, s.DepartureValidation), pending = s.DepartureValidation });
+        });
 
         api.MapGet("/config", (SettingsStore settings) =>
         {

@@ -8,7 +8,7 @@ namespace Pointage.Data;
 public sealed class Db(string path)
 {
     // Ne jamais modifier une migration publiée : en ajouter une nouvelle à la fin.
-    private static readonly string[] Migrations =
+    internal static readonly string[] Migrations =
     [
         """
         CREATE TABLE members(id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
@@ -28,9 +28,14 @@ public sealed class Db(string path)
         CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE TABLE kiosks(id INTEGER PRIMARY KEY, name TEXT NOT NULL, token_hash TEXT NOT NULL UNIQUE, paired_at TEXT NOT NULL, revoked_at TEXT);
         """,
+        // v2 : statut du départ (NULL = pas de départ). Les départs déjà enregistrés n'avaient pas de validation : ils sont validés.
+        """
+        ALTER TABLE presences ADD COLUMN departure_status TEXT CHECK(departure_status IN ('Pending','Validated'));
+        UPDATE presences SET departure_status='Validated' WHERE departed_at IS NOT NULL;
+        """,
     ];
 
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
 
     static Db()
     {

@@ -66,7 +66,7 @@ Les 14 tâches sont terminées et fusionnées dans `dev` (PR #1 à #14). La rele
 - Refuser les dates futures dans « Ajouter une présence ».
 - Renouveler le cookie de la borne à chaque visite (Chrome plafonne à 400 jours).
 - `ValidateMany` : se limiter au jour courant.
-- Le port 5080 est écrit à trois endroits et `appsettings.json` est écrasé à chaque mise à jour.
+- `appsettings.json` est écrasé à chaque mise à jour.
 - Fiche membre : statistiques sur une période au choix.
 - Afficher sur la page Réglages le nombre de membres à purger.
 - Renormaliser les fins de ligne (`git add --renormalize .`) dans un commit séparé.
@@ -75,3 +75,6 @@ Les 14 tâches sont terminées et fusionnées dans `dev` (PR #1 à #14). La rele
 - Corrigé : `Host` vérifié sur les pages locales (DNS rebinding), formules neutralisées dans le CSV, `secure_delete` et suppression des `.bak` à la purge, durée de conservation bornée à 120 mois dans l'assistant, export de l'historique journalisé, propriétaire du dossier de données forcé, pare-feu limité au sous-réseau local.
 - Laissé en l'état : formulaires sans `asp-page` (fonctionnent, jeton présent), pas de limite d'essais sur `/Login` (page locale uniquement), deux présences non refusées possibles en repassant un refus en validé (stats justes en jours distincts).
 - Piste : signer le `.sha256` des mises à jour (ECDsa, clé dans un secret de la CI) pour protéger d'une compromission du compte GitHub.
+
+### Chantier passages, borne, aide (2026-11-02)
+- Tâche 9 (feature/26-aide) : onglet Aide (`Pages/Aide/`, 8 pages, accessibles sans connexion mais locales uniquement), lien depuis la connexion, encadré kiosque dans Bornes ; `docs/borne.md` renvoie vers l'aide.

@@ -4,9 +4,21 @@
     ViewData["Title"] = "Bornes";
 }
 <h1>Bornes</h1>
+<p>Adresse à saisir sur la borne :</p>
+<ul>
+    @foreach (var u in Model.Urls)
+    {
+        <li><strong>@u</strong></li>
+    }
+</ul>
+<p>Si le nom ne fonctionne pas sur la borne, utilisez une adresse IP et réservez-la dans la box.</p>
+<div class="box">
+    <h2>Mettre la borne en mode kiosque</h2>
+    <p>Affichez la borne en plein écran, sans pouvoir quitter la page. Procédure pour Windows, Android et iPad : <a href="/Aide/Bornes#kiosque">Aide &gt; Bornes</a>. Script Windows : <a href="/static/borne-kiosque.ps1">borne-kiosque.ps1</a>.</p>
+</div>
 @if (Model.Code is not null)
 {
-    <p>Saisissez ce code sur la borne (adresse <strong>/borne</strong>) :</p>
+    <p>Saisissez ce code sur la borne (adresse <strong>@Model.Urls[0]</strong>) :</p>
     <p class="pairing-code">@Model.Code</p>
     <p>Valable jusqu'à @Model.CodeExpiresAt.ToString("HH:mm"), une seule fois.</p>
 }

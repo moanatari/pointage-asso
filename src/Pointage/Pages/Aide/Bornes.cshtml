@@ -1,0 +1,62 @@
+@page
+@{
+    ViewData["Title"] = "Bornes";
+}
+<p class="help-nav"><a href="/Aide/Membres">&larr; Membres</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Historique">Historique et statistiques &rarr;</a></p>
+<h1>Bornes</h1>
+<p>La borne est un PC, une tablette ou un téléphone qui affiche la page de pointage des enfants. <strong>Rien n'y est installé et aucune donnée n'y est stockée</strong> : seul un cookie de liaison reste dans le navigateur.</p>
+<h2>À l'écran de la borne</h2>
+<p>L'enfant tape son prénom ou son code, clique sur son nom, puis confirme.</p>
+<ul>
+    <li>Absent : <strong>✔ Oui, je suis arrivé</strong>.</li>
+    <li>Présent : <strong>Je pars</strong> (si le bouton « départ » est activé dans les Réglages), plus un petit lien <strong>Je viens d'arriver</strong> pour un enfant affiché présent qui est parti sans appuyer sur « Je pars » : cela crée une nouvelle arrivée, et l'ancien passage reste « départ non pointé » pour que le responsable le corrige (voir <a href="/Aide/Quotidien#oubli">Au quotidien</a>).</li>
+    <li><strong>✘ Non, retour</strong> revient à la recherche.</li>
+</ul>
+<p>Si le bouton « départ » est désactivé, seule l'arrivée est proposée.</p>
+<h2>Avant de commencer</h2>
+<ul>
+    <li>Pointage est installé sur le poste du responsable et l'assistant est terminé.</li>
+    <li>Les deux appareils sont sur le même réseau local (même Wi-Fi ou même box).</li>
+    <li>Le profil réseau du poste du responsable est <strong>Privé</strong> (Paramètres &gt; Réseau et Internet &gt; propriétés du réseau). Le pare-feu n'ouvre le port que pour les réseaux privés et de domaine, pas pour un réseau « Public ».</li>
+    <li>Vous connaissez l'adresse de la borne : elle est affichée en haut de la page <strong>Bornes</strong> (menu, super admin), sous la forme <code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/borne</code>. Si le nom ne fonctionne pas depuis la borne, utilisez l'adresse IP du poste (commande <code>ipconfig</code>, ligne « Adresse IPv4 »), par exemple <code>http://192.168.1.20:&lt;port&gt;/borne</code>. Pour qu'elle ne change pas, réservez-la dans la box (« bail DHCP statique »).</li>
+</ul>
+<h2>Lier la borne</h2>
+<p class="note">Réservé au super admin.</p>
+<p>La première fois, la borne affiche « Entrez le code de liaison ».</p>
+<ol>
+    <li>Sur le poste du responsable, connecté en super admin, ouvrez <strong>Bornes</strong> (menu du haut).</li>
+    <li>Saisissez un nom (par exemple « Entrée ») et cliquez sur <strong>Lier une borne</strong> : un code à 6 chiffres s'affiche.</li>
+    <li>Saisissez-le sur la borne dans les <strong>10 minutes</strong> qui suivent et cliquez sur <strong>Lier la borne</strong>. Il ne sert qu'une fois et il est annulé après 5 erreurs.</li>
+    <li>La borne affiche « Bonjour ! Cherche ton prénom » et apparaît dans la liste des bornes liées.</li>
+</ol>
+<p>On peut lier plusieurs bornes. Pour retirer l'accès à une borne (PC volé, tablette perdue), cliquez sur <strong>Révoquer</strong> à côté de son nom dans la même page.</p>
+<h2 id="kiosque">Mettre la borne en mode kiosque</h2>
+<p>Le mode kiosque affiche la borne en plein écran, sans barre d'adresse ni onglets, pour que les enfants ne puissent pas quitter la page.</p>
+<h3>Windows avec Edge (script fourni)</h3>
+<p>Sur le PC de la borne, <strong>dans la session Windows qui servira de borne</strong> (de préférence sans mot de passe ou avec ouverture automatique, pour qu'elle démarre toute seule) :</p>
+<ol>
+    <li>Ouvrez dans Edge l'adresse <code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/static/borne-kiosque.ps1</code> (même nom et même port que l'adresse de la borne, avec <code>/static/borne-kiosque.ps1</code> à la place de <code>/borne</code>) : le fichier <code>borne-kiosque.ps1</code> se télécharge (Edge peut avertir que ce fichier est rarement téléchargé : choisissez « Conserver »). À défaut, copiez-le depuis une clé USB.</li>
+    <li>Ouvrez PowerShell (pas besoin d'être administrateur) dans le dossier du fichier et lancez, en remplaçant l'adresse par celle de la borne :
+<pre>powershell -ExecutionPolicy Bypass -File .\borne-kiosque.ps1 -Url http://PC-ACCUEIL:&lt;port&gt;/borne</pre>
+    Le script vérifie l'adresse, trouve Microsoft Edge et crée dans le dossier « Démarrage » le raccourci <code>Borne Pointage</code>, qui lance <code>msedge.exe --kiosk &lt;adresse&gt; --edge-kiosk-type=fullscreen --no-first-run</code>.</li>
+    <li>Fermez la session puis rouvrez-la (ou redémarrez le PC) : Edge s'ouvre en plein écran sur la borne.</li>
+</ol>
+<p><strong>Pourquoi pas la « navigation publique » d'Edge ?</strong> Elle utilise une session InPrivate qui efface les cookies à la fermeture : la borne perdrait sa liaison à chaque redémarrage. Le script utilise un profil Edge normal, qui conserve le cookie.</p>
+<p>Pour quitter le mode kiosque : <kbd>Alt</kbd>+<kbd>F4</kbd>. Pour le désactiver définitivement : supprimez le raccourci <code>Borne Pointage</code> du dossier Démarrage (<kbd>Win</kbd>+<kbd>R</kbd>, puis <code>shell:startup</code>).</p>
+<h3>Tablette ou téléphone Android</h3>
+<p>Ouvrez l'adresse de la borne dans Chrome, puis épinglez l'écran : Paramètres &gt; Sécurité (ou « Écran de verrouillage ») &gt; Épinglage d'écran, activez-le, puis ouvrez l'écran des applications récentes, touchez l'icône de Chrome et choisissez « Épingler ». Pour quitter : maintenir ensemble les boutons Retour et Récent (ou balayage selon le modèle). Les noms exacts varient selon le fabricant.</p>
+<h3>iPad</h3>
+<p>Ouvrez l'adresse de la borne dans Safari, puis activez l'Accès guidé : Réglages &gt; Accessibilité &gt; Accès guidé (activer, définir un code). Dans Safari, triple-clic sur le bouton principal (ou sur le bouton latéral) puis <strong>Démarrer</strong>. Pour quitter : triple-clic et saisie du code.</p>
+<h2>Réglages liés à la borne</h2>
+<p class="note">Réservé au super admin.</p>
+<p>Dans <strong>Réglages</strong> : « Afficher le clavier à la borne » (utile pour une tablette tactile sans clavier), « Afficher le bouton « départ » à la borne » (<strong>Je pars</strong>) et « Faire valider les départs par un responsable ».</p>
+<h2>Si la borne redemande le code de liaison</h2>
+<p>La borne a perdu son cookie de liaison, ou elle a été révoquée. Rien n'est cassé : liez-la de nouveau comme ci-dessus (nouveau code). Si cela se reproduit à chaque redémarrage, cherchez la cause côté Edge :</p>
+<ul>
+    <li>le mode utilisé est-il bien celui du script (raccourci <code>Borne Pointage</code>), et non une session InPrivate ou « navigation publique » ?</li>
+    <li>Edge efface-t-il les cookies à la fermeture (Paramètres &gt; Confidentialité &gt; « Choisir les éléments à effacer chaque fois que vous fermez le navigateur ») ? Désactivez cette option.</li>
+    <li>un logiciel de nettoyage ou une stratégie de l'ordinateur supprime-t-il les cookies ?</li>
+</ul>
+<h2>Si la borne affiche « Le pointage est indisponible »</h2>
+<p>Le poste du responsable ne répond pas : vérifiez qu'il est allumé, que le service <code>Pointage</code> est démarré (console Services de Windows) et que les deux appareils sont sur le même réseau. Voir aussi <a href="/Aide/Depannage">Dépannage</a>.</p>
+<p class="help-nav"><a href="/Aide/Membres">&larr; Membres</a> · <a href="/Aide">Sommaire</a> · <a href="/Aide/Historique">Historique et statistiques &rarr;</a></p>

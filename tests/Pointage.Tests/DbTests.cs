@@ -45,6 +45,26 @@ public class DbTests
     }
 
     [Fact]
+    public void Migrate_V1WithDeparture_BackfillsValidated()
+    {
+        var db = NewDb();
+        using (var raw = new SqliteConnection($"Data Source={db.Path};Pooling=False"))
+        {
+            raw.Execute(Db.Migrations[0] + ";PRAGMA user_version=1");
+            raw.Execute("INSERT INTO members(id, code, created_at) VALUES(1, 'ACDEFG', '2026-10-01 00:00:00')");
+            raw.Execute(
+                """
+                INSERT INTO presences(member_id, day, arrived_at, departed_at, status, source) VALUES
+                  (1, '2026-10-20', '2026-10-20 09:00:00', '2026-10-20 11:00:00', 'Validated', 'Manual'),
+                  (1, '2026-10-21', '2026-10-21 09:00:00', NULL, 'Validated', 'Manual')
+                """);
+        }
+        db.Migrate();
+        using var c = db.Open();
+        Assert.Equal(["Validated", null], c.Query<string?>("SELECT departure_status FROM presences ORDER BY id"));
+    }
+
+    [Fact]
     public void Open_EnablesSecureDelete()
     {
         var db = NewDb();

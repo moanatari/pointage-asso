@@ -1,0 +1,33 @@
+@page
+@{
+    ViewData["Title"] = "Dépannage et questions fréquentes";
+}
+<p class="help-nav"><a href="/Aide/Administration">&larr; Administration</a> · <a href="/Aide">Sommaire</a></p>
+<h1>Dépannage et questions fréquentes</h1>
+<h2>J'ai perdu le mot de passe du super admin</h2>
+<p>Sur le poste du responsable, ouvrez une console <strong>en administrateur</strong> et lancez :</p>
+<pre>"C:\Program Files\Pointage\Pointage.exe" reset-admin &lt;identifiant&gt;</pre>
+<p>Le programme demande un nouveau mot de passe (deux fois). Si l'identifiant n'existe pas, il est créé ; s'il existe, il redevient super admin actif.</p>
+<h2>Changer le port, ou le port est bloqué</h2>
+<p>Normalement, utilisez Réglages &gt; Port réseau. Si l'interface est inaccessible, dans une console <strong>en administrateur</strong> :</p>
+<pre>"C:\Program Files\Pointage\Pointage.exe" set-port &lt;port&gt;
+sc stop Pointage
+sc start Pointage</pre>
+<p>Le port (entre 1024 et 65535) est enregistré ; la règle du pare-feu est mise à jour au démarrage du service. Reconfigurez ensuite les bornes avec la nouvelle adresse.</p>
+<h2>Redémarrer le service</h2>
+<p>Dans une console en administrateur : <code>sc stop Pointage</code> puis <code>sc start Pointage</code>. Ou console Services de Windows, service « Pointage », clic droit &gt; Redémarrer.</p>
+<h2>La borne ne se connecte pas</h2>
+<ol>
+    <li>Le poste du responsable est-il allumé et le service démarré ?</li>
+    <li>Les deux appareils sont-ils sur le même réseau ?</li>
+    <li>Le réseau du poste du responsable est-il en profil <strong>Privé</strong> ? Le pare-feu ne laisse passer que les réseaux privés et de domaine.</li>
+    <li>Le nom du poste ne fonctionne pas ? Utilisez l'adresse IP (<code>ipconfig</code>, « Adresse IPv4 ») et réservez-la dans la box pour qu'elle ne change pas.</li>
+    <li>Le port a-t-il changé ? La borne doit utiliser le port affiché dans <strong>Bornes</strong>.</li>
+</ol>
+<h2>La borne affiche « Le pointage est indisponible »</h2>
+<p>Même vérifications que ci-dessus. Une borne <em>révoquée</em> affiche, elle, le formulaire « Entrez le code de liaison » : liez-la de nouveau (voir <a href="/Aide/Bornes">Bornes</a>).</p>
+<h2>Pourquoi HTTP et pas HTTPS ?</h2>
+<p>Les pages du responsable ne répondent que sur le poste lui-même : mots de passe et données personnelles ne circulent jamais sur le réseau. Seule la borne passe par le Wi-Fi, et elle ne reçoit que le prénom, l'initiale du nom, le code et son état. Le HTTPS sur un réseau local demanderait un certificat auto-signé à installer sur chaque borne, avec des avertissements et une expiration : source de pannes sans gain réel ici.</p>
+<h2>Où sont les données ? Les sauvegardes ?</h2>
+<p>Dans <code>C:\ProgramData\Pointage</code> : la base <code>pointage.db</code> est un seul fichier. <strong>Il n'y a aucune sauvegarde automatique de l'historique</strong> : copiez régulièrement ce fichier (service arrêté) sur une clé USB ou un disque externe. Avant chaque changement de structure de la base (lors d'une mise à jour), le logiciel crée une copie <code>pointage-*.bak</code> dans le même dossier.</p>
+<p class="help-nav"><a href="/Aide/Administration">&larr; Administration</a> · <a href="/Aide">Sommaire</a></p>
