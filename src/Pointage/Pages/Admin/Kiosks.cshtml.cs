@@ -14,6 +14,8 @@ public class KiosksModel(KioskPairing pairing, AuditLog audit, TimeProvider time
     public string? Code { get; private set; }
     public DateTime CodeExpiresAt { get; private set; }
     public IReadOnlyList<string> Urls { get; private set; } = [];
+    public string UrlByName { get; private set; } = "";
+    public IReadOnlyList<string> PublicNetworks { get; private set; } = [];
     public string? Error { get; private set; }
     public IReadOnlyList<Pointage.Kiosk.Kiosk> Kiosks { get; private set; } = [];
 
@@ -22,6 +24,8 @@ public class KiosksModel(KioskPairing pairing, AuditLog audit, TimeProvider time
         Kiosks = pairing.List();
         // Le responsable consulte la page via localhost:<port> : c'est le port à donner à la borne.
         Urls = KioskAddresses.Urls(Request.Host.Port);
+        UrlByName = KioskAddresses.ByName(Request.Host.Port);
+        PublicNetworks = KioskAddresses.PublicNetworks();
     }
 
     public IActionResult OnPostPair()

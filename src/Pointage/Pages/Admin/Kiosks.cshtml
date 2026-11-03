@@ -4,14 +4,20 @@
     ViewData["Title"] = "Bornes";
 }
 <h1>Bornes</h1>
+@foreach (var n in Model.PublicNetworks)
+{
+    <div class="box error">
+        <p>Le réseau « @n » est en profil <strong>Public</strong> : le pare-feu bloque les bornes qui passent par ce réseau. Passez-le en <strong>Privé</strong> (Paramètres &gt; Réseau et Internet &gt; propriétés du réseau). <a href="/Aide/Bornes">Aide &gt; Bornes</a></p>
+    </div>
+}
 <p>Adresse à saisir sur la borne :</p>
 <ul>
     @foreach (var u in Model.Urls)
     {
-        <li><strong>@u</strong></li>
+        <li><strong>@u</strong>@(u == Model.UrlByName ? " (depuis un PC Windows uniquement)" : "")</li>
     }
 </ul>
-<p>Si le nom ne fonctionne pas sur la borne, utilisez une adresse IP et réservez-la dans la box.</p>
+<p>Réservez l'adresse IP du poste dans la box pour qu'elle ne change pas.</p>
 <div class="box">
     <h2>Mettre la borne en mode kiosque</h2>
     <p>Affichez la borne en plein écran, sans pouvoir quitter la page. Procédure pour Windows, Android et iPad : <a href="/Aide/Bornes#kiosque">Aide &gt; Bornes</a>. Script Windows : <a href="/static/borne-kiosque.ps1">borne-kiosque.ps1</a>.</p>

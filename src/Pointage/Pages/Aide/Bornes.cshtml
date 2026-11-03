@@ -18,7 +18,7 @@
     <li>Pointage est installé sur le poste du responsable et l'assistant est terminé.</li>
     <li>Les deux appareils sont sur le même réseau local (même Wi-Fi ou même box).</li>
     <li>Le profil réseau du poste du responsable est <strong>Privé</strong> (Paramètres &gt; Réseau et Internet &gt; propriétés du réseau). Le pare-feu n'ouvre le port que pour les réseaux privés et de domaine, pas pour un réseau « Public ».</li>
-    <li>Vous connaissez l'adresse de la borne : elle est affichée en haut de la page <strong>Bornes</strong> (menu, super admin), sous la forme <code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/borne</code>. Si le nom ne fonctionne pas depuis la borne, utilisez l'adresse IP du poste (commande <code>ipconfig</code>, ligne « Adresse IPv4 »), par exemple <code>http://192.168.1.20:&lt;port&gt;/borne</code>. Pour qu'elle ne change pas, réservez-la dans la box (« bail DHCP statique »).</li>
+    <li>Vous connaissez l'adresse de la borne : elle est affichée en haut de la page <strong>Bornes</strong> (menu, super admin), sous la forme <code>http://&lt;adresse-IP&gt;:&lt;port&gt;/borne</code>, par exemple <code>http://192.168.1.20:&lt;port&gt;/borne</code>. Pour qu'elle ne change pas, réservez-la dans la box (« bail DHCP statique »). L'adresse par le nom du poste (<code>http://&lt;nom-du-poste&gt;:&lt;port&gt;/borne</code>) ne fonctionne que depuis un PC Windows : iPhone, iPad et la plupart des tablettes Android ne la trouvent pas.</li>
 </ul>
 <h2>Lier la borne</h2>
 <p class="note">Réservé au super admin.</p>
